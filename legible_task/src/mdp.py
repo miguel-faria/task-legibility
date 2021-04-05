@@ -382,10 +382,13 @@ class LearnerMDP(object):
         self._reward_library = rewards
         self._sign = sign
         pol_library = []
+        q_library = []
         for i in range(len(rewards)):
-            pol, _ = self.policy_iteration(rewards[i])
+            pol, q = self.policy_iteration(rewards[i])
             pol_library += [pol]
+            q_library += [q]
         self._pol_library = np.array(pol_library)
+        self._q_library = np.array(q_library)
 
     @property
     def mdp_r(self):
@@ -468,7 +471,12 @@ class LearnerMDP(object):
         likelihoods = []
 
         for state, action in traj:
-            likelihoods += [self.likelihood(state, action, conf)]
+            likelihood = []
+            for i in range(len(self._reward_library)):
+                q = self._q_library[i]
+                likelihood += [np.exp(self._sign * conf * q[state, action]) /
+                               np.sum(np.exp(self._sign * conf * q[state, :]))]
+            likelihoods += [likelihood]
 
         r_likelihood = np.cumprod(np.array(likelihoods), axis=0)[-1]
         max_likelihood = np.max(r_likelihood)
