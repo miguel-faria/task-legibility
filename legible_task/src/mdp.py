@@ -478,6 +478,8 @@ class LearnerMDP(object):
                                np.sum(np.exp(self._sign * conf * q[state, :]))]
             likelihoods += [likelihood]
 
+        print(likelihoods)
+
         r_likelihood = np.cumprod(np.array(likelihoods), axis=0)[-1]
         max_likelihood = np.max(r_likelihood)
         low_magnitude = math.floor(math.log(np.min(r_likelihood), 10)) - 1
@@ -590,6 +592,8 @@ class LearnerMDP(object):
     def learner_eval(self, conf, trajs, traj_len, demo_step, goal):
 
         indexes = []
+        n_trajs = len(trajs)
+        it = 0
         for i in range(demo_step, traj_len+1, demo_step):
             indexes += [i]
 
@@ -600,13 +604,17 @@ class LearnerMDP(object):
             indexes += [traj_len]
         
         correct_count = np.zeros(n_idx)        
-        for traj in tqdm(trajs):
-            for i in tqdm(range(n_idx)):
+        for traj in trajs:
+            for i in range(n_idx):
                 idx = indexes[i]
                 reward, r_idx = self.birl_inference(traj[:idx], conf)
                 if r_idx == goal:
                     correct_count[i] += 1
 
+            it += 1
+            print('Completed %d%% of trajectories' % (int(it / n_trajs * 100)), end='\r')
+
+        print('Finished.')
         return correct_count
 
 
