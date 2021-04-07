@@ -478,16 +478,15 @@ class LearnerMDP(object):
                                np.sum(np.exp(self._sign * conf * q[state, :]))]
             likelihoods += [likelihood]
 
-        print(likelihoods)
-
         r_likelihood = np.cumprod(np.array(likelihoods), axis=0)[-1]
         max_likelihood = np.max(r_likelihood)
         low_magnitude = math.floor(math.log(np.min(r_likelihood), 10)) - 1
         p_max = np.isclose(r_likelihood, max_likelihood, atol=10**low_magnitude, rtol=10**low_magnitude).astype(int)
         p_max = p_max / p_max.sum()
-        amax_likelihood = np.random.choice(len(self._reward_library), p=p_max)
+        reward_idx = np.random.choice(len(self._reward_library), p=p_max)
+        reward_conf = p_max[reward_idx]
 
-        return self._reward_library[amax_likelihood], amax_likelihood
+        return self._reward_library[reward_idx], reward_idx, reward_conf
 
     def birl_gradient_ascent(self, traj, conf, alpha):
 
@@ -603,19 +602,28 @@ class LearnerMDP(object):
             n_idx = traj_len // demo_step + 1
             indexes += [traj_len]
         
-        correct_count = np.zeros(n_idx)        
+        correct_count = np.zeros(n_idx)
+        inference_conf = np.zeros(n_idx)
         for traj in trajs:
             for i in range(n_idx):
                 idx = indexes[i]
-                reward, r_idx = self.birl_inference(traj[:idx], conf)
+                reward, r_idx, r_conf = self.birl_inference(traj[:idx], conf)
                 if r_idx == goal:
                     correct_count[i] += 1
+                    inference_conf[i] += r_conf
 
             it += 1
             print('Completed %d%% of trajectories' % (int(it / n_trajs * 100)), end='\r')
 
+        avg_inference_conf = []
+        for i in range(n_idx):
+            if correct_count[i] != 0:
+                avg_inference_conf += [inference_conf[i] / correct_count[i]]
+            else:
+                avg_inference_conf += [0.0]
+
         print('Finished.')
-        return correct_count
+        return correct_count, avg_inference_conf
 
 
 def main():

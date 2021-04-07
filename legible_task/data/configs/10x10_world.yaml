@@ -1,0 +1,36 @@
+n_rows: 10
+n_cols: 10
+task_states:
+  - !!python/tuple [9, 3, 'P']
+  - !!python/tuple [9, 1, 'D']
+  - !!python/tuple [1, 6, 'C']
+  - !!python/tuple [5, 4, 'L']
+  - !!python/tuple [10, 8, 'T']
+  - !!python/tuple [7, 9, 'O']
+walls:
+  - [!!python/tuple [0.5, 0.5], !!python/tuple [0.5, 1.5], !!python/tuple [0.5, 2.5], !!python/tuple [0.5, 3.5],
+     !!python/tuple [0.5, 4.5], !!python/tuple [0.5, 5.5], !!python/tuple [0.5, 6.5], !!python/tuple [0.5, 7.5],
+     !!python/tuple [0.5, 8.5], !!python/tuple [0.5, 9.5], !!python/tuple [0.5, 10.5]]
+  - [!!python/tuple [10.5, 0.5], !!python/tuple [10.5, 1.5], !!python/tuple [10.5, 2.5], !!python/tuple [10.5, 3.5],
+     !!python/tuple [10.5, 4.5], !!python/tuple [10.5, 5.5], !!python/tuple [10.5, 6.5], !!python/tuple [10.5, 7.5],
+     !!python/tuple [10.5, 8.5], !!python/tuple [10.5, 9.5], !!python/tuple [10.5, 10.5]]
+  - [!!python/tuple [0.5, 0.5], !!python/tuple [1.5, 0.5], !!python/tuple [2.5, 0.5], !!python/tuple [3.5, 0.5],
+     !!python/tuple [4.5, 0.5], !!python/tuple [5.5, 0.5], !!python/tuple [6.5, 0.5], !!python/tuple [7.5, 0.5],
+     !!python/tuple [8.5, 0.5], !!python/tuple [9.5, 0.5], !!python/tuple [10.5, 0.5]]
+  - [!!python/tuple [0.5, 10.5], !!python/tuple [1.5, 10.5], !!python/tuple [2.5, 10.5], !!python/tuple [3.5, 10.5],
+     !!python/tuple [4.5, 10.5], !!python/tuple [5.5, 10.5], !!python/tuple [6.5, 10.5], !!python/tuple [7.5, 10.5],
+     !!python/tuple [8.5, 10.5], !!python/tuple [9.5, 10.5], !!python/tuple [10.5, 10.5]]
+  - [!!python/tuple [0.5, 2.5], !!python/tuple [1.5, 2.5]]
+  - [!!python/tuple [3.5, 6.5], !!python/tuple [3.5, 7.5]]
+  - [!!python/tuple [3.5, 0.5], !!python/tuple [3.5, 1.5]]
+  - [!!python/tuple [2.5, 2.5], !!python/tuple [3.5, 2.5], !!python/tuple [4.5, 2.5], !!python/tuple [5.5, 2.5]]
+  - [!!python/tuple [6.5, 2.5], !!python/tuple [7.5, 2.5], !!python/tuple [8.5, 2.5], !!python/tuple [9.5, 2.5]]
+  - [!!python/tuple [0.5, 6.5], !!python/tuple [1.5, 6.5], !!python/tuple [2.5, 6.5]]
+  - [!!python/tuple [3.5, 8.5], !!python/tuple [4.5, 8.5], !!python/tuple [5.5, 8.5], !!python/tuple [6.5, 8.5],
+     !!python/tuple [7.5, 8.5]]
+  - [!!python/tuple [8.5, 8.5], !!python/tuple [9.5, 8.5], !!python/tuple [10.5, 8.5]]
+  - [!!python/tuple [3.5, 2.5], !!python/tuple [3.5, 3.5], !!python/tuple [3.5, 4.5], !!python/tuple [3.5, 5.5]]
+  - [!!python/tuple [3.5, 8.5], !!python/tuple [3.5, 9.5]]
+  - [!!python/tuple [8.5, 2.5], !!python/tuple [8.5, 3.5]]
+  - [!!python/tuple [8.5, 4.5], !!python/tuple [8.5, 5.5], !!python/tuple [8.5, 6.5], !!python/tuple [8.5, 7.5]]
+tasks: ['P', 'D', 'C', 'L', 'T', 'O']
