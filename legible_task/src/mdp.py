@@ -3,7 +3,9 @@
 import numpy as np
 import time
 import math
+import re
 from tqdm import tqdm
+from termcolor import colored
 
 
 class MDP(object):
@@ -42,8 +44,8 @@ class MDP(object):
         return self._mdp
 
     @mdp.setter
-    def mdp(self, x, a, p, c, gamma):
-        self._mdp = (x, a, p, c, gamma)
+    def mdp(self, mdp):
+        self._mdp = mdp
 
     @goals.setter
     def goals(self, goals):
@@ -211,27 +213,53 @@ class MDP(object):
             a_traj = started_trajs[i][1]
             x = list(X).index(traj[-1])
             stop_inner = False
+            it = 0
+            add_traj = False
             while not stop_inner:
-                pol_act = np.nonzero(pol[x, :])[0]
-                if len(pol_act) > 1:
-                    for j in range(1, len(pol_act)):
-                        x_tmp = np.random.choice(nX, p=P[A[pol_act[j]]][x, :])
-                        started_trajs += [[list(traj) + [X[x_tmp]], list(a_traj) + [A[pol_act[j]]]]]
 
-                a = pol_act[0]
-                x = np.random.choice(nX, p=P[A[a]][x, :])
-
-                traj += [X[x]]
-                a_traj += [A[a]]
-
-                stop_inner = (x in self._goal_states)
-                if stop_inner:
+                if x in self._goal_states:
                     a_traj += [A[np.random.choice(nA, p=pol[x, :])]]
+                    add_traj = True
+                    break
+
+                else:
+                    pol_act = np.nonzero(pol[x, :])[0]
+                    if len(pol_act) > 1:
+                        for j in range(1, len(pol_act)):
+                            if len(np.nonzero(P[A[pol_act[j]]][x, :])) > 1:
+                                x_tmp = np.random.choice(nX, p=P[A[pol_act[j]]][x, :])
+                                while x_tmp == x:
+                                    x_tmp = np.random.choice(nX, p=P[A[pol_act[j]]][x, :])
+                            else:
+                                x_tmp = np.random.choice(nX, p=P[A[pol_act[j]]][x, :])
+                            tmp_traj = [list(traj) + [X[x_tmp]], list(a_traj) + [A[pol_act[j]]]]
+                            if tmp_traj not in started_trajs:
+                                started_trajs += [tmp_traj]
+
+                    a = pol_act[0]
+                    x = np.random.choice(nX, p=P[A[a]][x, :])
+
+                    if X[x] != traj[-1]:
+                        traj += [X[x]]
+                        a_traj += [A[a]]
+
+                        stop_inner = (x in self._goal_states)
+                        if stop_inner:
+                            a_traj += [A[np.random.choice(nA, p=pol[x, :])]]
+
+                        add_traj = True
+
+                    else:
+                        if it > 1000:
+                            stop_inner = True
+
+                    it += 1
 
             i += 1
-            stop = (i >= len(started_trajs))
-            trajs += [np.array(traj)]
-            acts += [np.array(a_traj)]
+            stop = (i >= len(started_trajs) or i > 1000)
+            if add_traj:
+                trajs += [np.array(traj)]
+                acts += [np.array(a_traj)]
 
         return np.array(trajs, dtype=object), np.array(acts, dtype=object)
 
@@ -266,11 +294,16 @@ class MDP(object):
 
 class LegibleTaskMDP(MDP):
     
-    def __init__(self, x, a, p, gamma, task, tasks, beta, goal_states, task_mdps=None, q_mdps=None):
+    def __init__(self, x, a, p, gamma, task, task_states, tasks, beta, goal_states, sign, leg_func,
+                 task_mdps=None, q_mdps=None):
 
+        self._legible_functions = {'leg_optimal': self.optimal_legible_cost, 'leg_weight': self.legible_cost}
         self._task = task
         self._tasks = tasks
         self._tasks_q = []
+        self._task_states = {}
+        for task_state in task_states:
+            self._task_states[task_state[2]] = tuple([task_state[0], task_state[1]])
         if task_mdps:
             for mdp in task_mdps:
                 _, qi = mdp.policy_iteration()
@@ -278,28 +311,102 @@ class LegibleTaskMDP(MDP):
         elif q_mdps:
             self._tasks_q = q_mdps
         else:
+            print(colored('Neither task mdps or task Q* functions given. Exiting before finishing initializing '
+                          'Legible MDP. Please re-initialize MDP....',
+                          'red'))
             return
         self._beta = beta
         nX = len(x)
         nA = len(a)
         c = np.zeros((nX, nA))
-        for i in range(nX):
-            for j in range(nA):
-                c[i, j] = self.cost(i, j)
 
         super().__init__(x, a, p, c, gamma, goal_states)
+        if leg_func in list(self._legible_functions.keys()):
+            for i in range(nX):
+                for j in range(nA):
+                    c[i, j] = self._legible_functions[leg_func](i, j, sign)
 
-    def cost(self, x, a):
+            self._mdp = (x, a, p, c, gamma)
+
+        else:
+            print(colored('Invalid legibility function. Exiting without computing cost function.',
+                          'red'))
+            return
+
+    def update_cost_function(self, legible_func, sign):
+
+        mdp = self.mdp
+        x = mdp[0]
+        a = mdp[1]
+        p = mdp[2]
+        gamma = mdp[4]
+        nX = len(x)
+        nA = len(a)
+        c = np.zeros((nX, nA))
+
+        if legible_func in list(self._legible_functions.keys()):
+            for i in range(nX):
+                for j in range(nA):
+                    c[i, j] = self._legible_functions[legible_func](i, j, sign)
+
+            self._mdp = (x, a, p, c, gamma)
+
+        else:
+            print(colored('Invalid legibility function. Exiting without computing cost function.',
+                          'red'))
+            return
+
+    def optimal_legible_cost(self, x, a, sign):
         
         task_idx = self._tasks.index(self._task)
-        
-        task_cost = np.exp(-self._beta * self._tasks_q[task_idx][x, a])
+
+        task_cost = np.exp(sign * self._beta * self._tasks_q[task_idx][x, a])
         tasks_sum = task_cost
         for i in range(len(self._tasks_q)):
             if i != task_idx:
-                tasks_sum += np.exp(-self._beta * self._tasks_q[i][x, a])
+                tasks_sum += np.exp(sign * self._beta * self._tasks_q[i][x, a])
 
         return task_cost / tasks_sum
+
+    def legible_cost(self, x, a, sign):
+
+        X = self._mdp[0]
+        A = self._mdp[1]
+        P = self._mdp[2]
+
+        sa_prob = self.optimal_legible_cost(x, a, sign)
+
+        nxt_states = np.nonzero(P[A[a]][x, :])[0]
+
+        x_dist_ratio = 0
+
+        for state in nxt_states:
+
+            state_prob = P[A[a]][x, state]
+
+            state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", X[state], re.I)
+            row = int(state_split.group(1))
+            col = int(state_split.group(2))
+
+            task_dist = math.inf
+            for task in self._task_states.keys():
+                task_state = self._task_states[task]
+                dist = math.sqrt((row - task_state[0]) ** 2 + (col - task_state[1]) ** 2)
+                if dist < task_dist:
+                    task_dist = dist
+
+            goal_dist = math.inf
+            for goal in self._task:
+                dist = math.sqrt((row - self._task_states[goal][0]) ** 2 + (col - self._task_states[goal][1]) ** 2)
+                if dist < goal_dist:
+                    goal_dist = dist
+
+            try:
+                x_dist_ratio += state_prob * min(task_dist / goal_dist, 1.0)
+            except ZeroDivisionError:
+                x_dist_ratio += state_prob
+
+        return sa_prob * x_dist_ratio
 
     def value_iteration(self):
 
@@ -480,7 +587,7 @@ class LearnerMDP(object):
 
         r_likelihood = np.cumprod(np.array(likelihoods), axis=0)[-1]
         max_likelihood = np.max(r_likelihood)
-        low_magnitude = math.floor(math.log(np.min(r_likelihood), 10)) - 1
+        low_magnitude = math.floor(math.log(np.min(r_likelihood), 10)) - 2
         p_max = np.isclose(r_likelihood, max_likelihood, atol=10**low_magnitude, rtol=10**low_magnitude).astype(int)
         p_max = p_max / p_max.sum()
         reward_idx = np.random.choice(len(self._reward_library), p=p_max)

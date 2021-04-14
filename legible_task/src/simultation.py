@@ -70,7 +70,7 @@ def main():
         mdps_w['mdp' + str(i + 1)] = mdp
     print('Legible task MDP')
     for i in tqdm(range(len(goals)), desc='Legible Task MDPs'):
-        mdp = LegibleTaskMDP(X_w, A_w, P_w, 0.9, goals[i], goals, 2.0, get_goal_states(X_w, goals[i]),
+        mdp = LegibleTaskMDP(X_w, A_w, P_w, 0.9, goals[i], objs_states, goals, 2.0, get_goal_states(X_w, goals[i]), -1,
                              # task_mdps=list(mdps_w.values()))
                              q_mdps=q_mdps_w)
         task_mdps_w['leg_mdp_' + str(i + 1)] = mdp

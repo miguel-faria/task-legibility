@@ -13,6 +13,9 @@ class MazeWorld(ABC):
     def generate_actions(self):
         pass
 
+    def generate_stochastic_probabilities(self, states, actions, obj_states, max_rows, max_cols, fail_chance):
+        pass
+
     def generate_probabilities(self, states, actions, obj_states, max_rows, max_cols):
         pass
 
@@ -22,10 +25,14 @@ class MazeWorld(ABC):
     def generate_costs_varied(self, goal, states, actions, probabilities):
         pass
 
-    def generate_world(self, n_rows, n_cols, obj_states):
+    def generate_world(self, n_rows, n_cols, obj_states, prob_type, fail_chance=0.0):
         states = self.generate_states(n_rows, n_cols, obj_states)
         actions = self.generate_actions()
-        probabilities = self.generate_probabilities(states, actions, obj_states, n_rows, n_cols)
+        if prob_type.lower().find('stoc') != -1:
+            probabilities = self.generate_stochastic_probabilities(states, actions, obj_states, n_rows,
+                                                                   n_cols, fail_chance)
+        else:
+            probabilities = self.generate_probabilities(states, actions, obj_states, n_rows, n_cols)
 
         return states, actions, probabilities
 
@@ -41,6 +48,9 @@ class WallMazeWorld(ABC):
     def generate_actions(self):
         pass
 
+    def generate_stochastic_probabilities(self, states, actions, obj_states, max_rows, max_cols, walls, fail_chance):
+        pass
+
     def generate_probabilities(self, states, actions, obj_states, max_rows, max_cols, walls):
         pass
 
@@ -50,10 +60,14 @@ class WallMazeWorld(ABC):
     def generate_costs_varied(self, goal, states, actions, probabilities):
         pass
 
-    def generate_world(self, n_rows, n_cols, obj_states, walls):
+    def generate_world(self, n_rows, n_cols, obj_states, walls, prob_type, fail_chance=0.0):
         states = self.generate_states(n_rows, n_cols, obj_states)
         actions = self.generate_actions()
-        probabilities = self.generate_probabilities(states, actions, obj_states, n_rows, n_cols, walls)
+        if prob_type.lower().find('stoc') != -1:
+            probabilities = self.generate_stochastic_probabilities(states, actions, obj_states, n_rows,
+                                                                   n_cols, walls, fail_chance)
+        else:
+            probabilities = self.generate_probabilities(states, actions, obj_states, n_rows, n_cols, walls)
 
         return states, actions, probabilities
 
@@ -85,6 +99,175 @@ class AutoCollectMazeWord(MazeWorld):
 
     def generate_actions(self):
         return np.array(['U', 'D', 'L', 'R', 'N'])
+
+    def generate_stochastic_probabilities(self, states, actions, obj_states, max_rows, max_cols, fail_chance):
+
+        objs_loc = []
+        objs = []
+        for x, y, o in obj_states:
+            objs_loc += [(x, y)]
+            objs += [o]
+        n_objs = len(objs)
+        nX = len(states)
+        P = {}
+        state_lst = list(states)
+
+        for a in actions:
+
+            p = np.zeros((nX, nX))
+            if a == 'U':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_row = max(1, curr_row - 1)
+                    next_loc = (tmp_nxt_row, curr_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+
+                    if nxt_state in states:
+                        nxt_idx = state_lst.index(nxt_state)
+
+                    else:
+                        obj_loc_idx = objs_loc.index(next_loc)
+                        if curr_state_obj == 'N':
+                            nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                        else:
+                            nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                            obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                            nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                            for i in range(1, len(obj_perm)):
+                                if nxt_state in states:
+                                    break
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                            nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'D':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_row = min(max_rows, curr_row + 1)
+                    next_loc = (tmp_nxt_row, curr_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+
+                    if nxt_state in states:
+                        nxt_idx = state_lst.index(nxt_state)
+
+                    else:
+                        obj_loc_idx = objs_loc.index(next_loc)
+                        if curr_state_obj == 'N':
+                            nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                        else:
+                            nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                            obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                            nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                            for i in range(1, len(obj_perm)):
+                                if nxt_state in states:
+                                    break
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                            nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'L':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_col = max(1, curr_col - 1)
+                    next_loc = (curr_row, tmp_nxt_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+
+                    if nxt_state in states:
+                        nxt_idx = state_lst.index(nxt_state)
+
+                    else:
+                        obj_loc_idx = objs_loc.index(next_loc)
+                        if curr_state_obj == 'N':
+                            nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                        else:
+                            nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                            obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                            nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                            for i in range(1, len(obj_perm)):
+                                if nxt_state in states:
+                                    break
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                            nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'R':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_col = min(max_cols, curr_col + 1)
+                    next_loc = (curr_row, tmp_nxt_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+                    if nxt_state in states:
+                        nxt_idx = state_lst.index(nxt_state)
+
+                    else:
+                        obj_loc_idx = objs_loc.index(next_loc)
+                        if curr_state_obj == 'N':
+                            nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                        else:
+                            nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                            obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                            nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                            for i in range(1, len(obj_perm)):
+                                if nxt_state in states:
+                                    break
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                            nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'N':
+                p = np.eye(nX)
+
+            else:
+                print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                continue
+
+            P[a] = p
+
+        return P
 
     def generate_probabilities(self, states, actions, obj_states, max_rows, max_cols):
 
@@ -332,6 +515,192 @@ class WallAutoCollectMazeWorld(WallMazeWorld):
 
     def generate_actions(self):
         return np.array(['U', 'D', 'L', 'R', 'N'])
+
+    def generate_stochastic_probabilities(self, states, actions, obj_states, max_rows, max_cols, walls, fail_chance):
+
+        objs_loc = []
+        objs = []
+        for x, y, o in obj_states:
+            objs_loc += [(x, y)]
+            objs += [o]
+        n_objs = len(objs)
+        nX = len(states)
+        P = {}
+        state_lst = list(states)
+
+        for a in actions:
+
+            p = np.zeros((nX, nX))
+            if a == 'U':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_row = max(1, curr_row - 1)
+                    next_loc = (tmp_nxt_row, curr_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+
+                    if self.wall_exists(state, a, walls):
+                        nxt_idx = state_idx
+
+                    else:
+                        if nxt_state in states:
+                            nxt_idx = state_lst.index(nxt_state)
+
+                        else:
+                            obj_loc_idx = objs_loc.index(next_loc)
+                            if curr_state_obj == 'N':
+                                nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                            else:
+                                nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                                obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                                for i in range(1, len(obj_perm)):
+                                    if nxt_state in states:
+                                        break
+                                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                                nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'D':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_row = min(max_rows, curr_row + 1)
+                    next_loc = (tmp_nxt_row, curr_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+
+                    if self.wall_exists(state, a, walls):
+                        nxt_idx = state_idx
+
+                    else:
+                        if nxt_state in states:
+                            nxt_idx = state_lst.index(nxt_state)
+
+                        else:
+                            obj_loc_idx = objs_loc.index(next_loc)
+                            if curr_state_obj == 'N':
+                                nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                            else:
+                                nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                                obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                                for i in range(1, len(obj_perm)):
+                                    if nxt_state in states:
+                                        break
+                                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                                nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'L':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_col = max(1, curr_col - 1)
+                    next_loc = (curr_row, tmp_nxt_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+
+                    if self.wall_exists(state, a, walls):
+                        nxt_idx = state_idx
+
+                    else:
+                        if nxt_state in states:
+                            nxt_idx = state_lst.index(nxt_state)
+
+                        else:
+                            obj_loc_idx = objs_loc.index(next_loc)
+                            if curr_state_obj == 'N':
+                                nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                            else:
+                                nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                                obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                                for i in range(1, len(obj_perm)):
+                                    if nxt_state in states:
+                                        break
+                                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                                nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'R':
+                for state in states:
+                    state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", state, re.I)
+                    curr_row = int(state_split.group(1))
+                    curr_col = int(state_split.group(2))
+                    curr_state_obj = state_split.group(3)
+                    state_idx = state_lst.index(state)
+                    tmp_nxt_col = min(max_cols, curr_col + 1)
+                    next_loc = (curr_row, tmp_nxt_col)
+                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + curr_state_obj
+
+                    if self.wall_exists(state, a, walls):
+                        nxt_idx = state_idx
+
+                    else:
+                        if nxt_state in states:
+                            nxt_idx = state_lst.index(nxt_state)
+
+                        else:
+                            obj_loc_idx = objs_loc.index(next_loc)
+                            if curr_state_obj == 'N':
+                                nxt_idx = state_lst.index(''.join(str(x) + ' ' for x in next_loc) + objs[obj_loc_idx])
+
+                            else:
+                                nxt_obj_lst = list(curr_state_obj) + list(objs[obj_loc_idx])
+                                obj_perm = [''.join(x) for x in list(permutations(nxt_obj_lst))]
+                                nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[0]
+                                for i in range(1, len(obj_perm)):
+                                    if nxt_state in states:
+                                        break
+                                    nxt_state = ''.join(str(x) + ' ' for x in next_loc) + obj_perm[i]
+                                nxt_idx = state_lst.index(nxt_state)
+
+                    if state_idx != nxt_idx:
+                        p[state_idx][nxt_idx] = 1.0 - fail_chance
+                        p[state_idx][state_idx] = fail_chance
+
+                    else:
+                        p[state_idx][state_idx] = 1.0
+
+            elif a == 'N':
+                p = np.eye(nX)
+
+            else:
+                print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                continue
+
+            P[a] = p
+
+        return P
 
     def generate_probabilities(self, states, actions, obj_states, max_rows, max_cols, walls):
 
