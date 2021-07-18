@@ -21,20 +21,25 @@ def main():
 
     WORLD_CONFIGS = {1: '8x8_world.yaml', 2: '10x10_world.yaml', 3: '8x8_world_2.yaml', 4: '10x10_world_2.yaml'}
 
-    parser = argparse.ArgumentParser(description='IRL task legibility argument parser')
-    parser.add_argument('--agent', dest='agent', type=str, help='Type of agent to user, either optimal or legible')
-    parser.add_argument('--n_trajs', dest='n_trajs', type=int,
+    parser = argparse.ArgumentParser(description='IRL task legibility in stochastic environment argument parser')
+    parser.add_argument('--agent', dest='agent', type=str, required=True, choices=['optimal', 'legible'],
+                        help='Type of agent to user, either optimal or legible')
+    parser.add_argument('--n_trajs', dest='n_trajs', type=int, required=True,
                         help='Number of trajectories to generate for each objective')
-    parser.add_argument('--world', dest='world', type=int, help='World config ID')
+    parser.add_argument('--world', dest='world', type=int, required=True, help='World config ID')
+    parser.add_argument('--mode', dest='mode', type=str, required=True, choices=['single', 'all'],
+                        help='Task legibility performance mode: \'single\' to test performance for one specific'
+                             ' initial position (requires specifying initial position with field --begin);'
+                             '\'all\' to test performance for all possible initial positions')
     parser.add_argument('--begin', dest='x0', type=str,
                         help='Initial state in the format \'x y\', where x, y are the state coords')
-    parser.add_argument('--leg_func', dest='leg_func', type=str,
+    parser.add_argument('--leg_func', dest='leg_func', type=str, required=True, choices=['leg_optimal', 'leg_weight'],
                         help='Function to compute (state, action) legibility. Values accepted: \'leg_optimal\' '
                              'that computes the most legible optimal action for state and \'leg_weight\' '
                              'that computes the optimal legible action leveraged by the proximity to objectives.')
-    parser.add_argument('--reps', dest='reps', type=int,
+    parser.add_argument('--reps', dest='reps', type=int, required=True,
                         help='Number of repetitions for the evaluation cycle to clear rounding errors.')
-    parser.add_argument('--fail_prob', dest='fail_chance', type=float,
+    parser.add_argument('--fail_prob', dest='fail_chance', type=float, required=True,
                         help='Probability of movement failing and staying in same place.')
 
     args = parser.parse_args()
