@@ -56,8 +56,8 @@ class Utilities(object):
 	@staticmethod
 	def softmax(param: np.ndarray, temp: float) -> np.ndarray:
 	
-		temp = np.exp((param - np.max(param)) / temp)
-		return temp/temp.sum(axis=1)
+		tmp = np.exp((param - np.max(param, axis=1)[:, None]) / temp)
+		return tmp/tmp.sum(axis=1)[:, None]
 	
 	@staticmethod
 	def softmax_grad(param: np.ndarray, temp: float) -> np.ndarray:
@@ -69,9 +69,9 @@ class Utilities(object):
 		for x in range(nX):
 			for a in range(nA):
 				for a2 in range(nA):
-					sofmax_grad[x, a] = softmax_pol[x, a] * ((1 if a == a2 else 0) - softmax_pol[x, a2])
+					sofmax_grad[x*a, x*a2] = softmax_pol[x, a] * ((1 if a == a2 else 0) - softmax_pol[x, a2])
 			
-		return np.diagonal(sofmax_grad).reshape((nX, nA), 'F')
+		return np.diagonal(sofmax_grad).reshape((nX, nA), order='F')
 
 
 class MDP(object):
@@ -125,10 +125,10 @@ class MDP(object):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
-		if task_idx:
-			c = self._mdp[3][task_idx]
-		else:
+		if task_idx is None:
 			c = self._mdp[3]
+		else:
+			c = self._mdp[3][task_idx]
 		gamma = self._mdp[4]
 		
 		nS = len(X)
@@ -367,7 +367,7 @@ class LegibleTaskMDP(MDP):
 	
 	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, task: str, task_states: List[Tuple[int, int, str]], tasks: List[str],
 				 beta: float, goal_states: List[str], sign: int, leg_func: str, q_mdps: Dict[str, np.ndarray], v_mdps: Dict[str, np.ndarray]):
-		self._legible_functions = { 'leg_optimal': self.optimal_legible_cost, 'leg_weight': self.legible_cost }
+		self._legible_functions = {'leg_optimal': self.optimal_legible_cost, 'leg_weight': self.legible_cost}
 		self._task = task
 		self._tasks = tasks
 		self._task_states = {}
@@ -465,6 +465,92 @@ class LegibleTaskMDP(MDP):
 				x_dist_ratio += state_prob
 		
 		return sa_prob * x_dist_ratio
+
+	def pol_legibility(self, tasks_q_pi: Dict[str, np.ndarray], eta: float) -> float:
+		
+		nX, nA = tasks_q_pi[self._task].shape
+		
+		task_prob = (np.exp(eta * (tasks_q_pi[self._task] - self._v_mdps[self._task][:, None])) / (nX * nA)).sum()
+		task_prob_sum = []
+		
+		for task in self._tasks:
+			task_prob_sum += [(np.exp(eta * (tasks_q_pi[task] - self._v_mdps[task][:, None])) / (nX * nA)).sum()]
+			
+		task_prob_sum = np.array(task_prob_sum)
+		return task_prob / task_prob_sum.sum()
+	
+	def legibility_optimization(self, task_rewards: Dict[str, np.ndarray], learn_rate: float, eta: float, improv_thresh: float,
+								softmax_temp: float, init_params: np.ndarray, best_action: bool = False) -> np.ndarray:
+		
+		def get_policy(param: np.ndarray, temperature: float) -> np.ndarray:
+			return Utilities.softmax(param, temperature)
+
+		def compute_q_pi(rewards: Dict[str, np.ndarray], pi: np.ndarray) -> Dict[str, np.ndarray]:
+			
+			q_pis = {}
+			nX, nA = pi.shape
+			
+			for task in self._tasks:
+				
+				Q = np.zeros((nX, nA))
+				J = self.evaluate_pol(pi, self._tasks.index(task))
+				
+				for a in range(nA):
+					Q[:, a, None] = rewards[task][:, a, None] + self.gamma * self.transitions_prob[self.actions[a]].dot(J)
+				
+				q_pis[task] = Q
+			
+			return q_pis
+		
+		def theta_gradient(tasks_q_pi: Dict[str, np.ndarray], pi: np.ndarray, params: np.ndarray, temp: float) -> np.ndarray:
+			
+			goal_q_grad = Utilities.Q_func_grad(self.transitions_prob, self.actions, pi, tasks_q_pi[self._task], self.gamma)
+			gradient = np.zeros(tasks_q_pi[self._task].shape)
+			softmax_grad = Utilities.softmax_grad(params, temp)
+			
+			for task in self._tasks:
+				task_q_grad = Utilities.Q_func_grad(self.transitions_prob, self.actions, pi, tasks_q_pi[task], self.gamma)
+				gradient += (eta * (goal_q_grad - task_q_grad)) * np.exp(eta * (tasks_q_pi[self._task] + self._v_mdps[task][:, None] -
+																				tasks_q_pi[task] - self._v_mdps[self._task][:, None]))
+
+			return gradient * softmax_grad
+		
+		stop = False
+		theta = init_params
+		pol = get_policy(theta, softmax_temp)
+		tasks_q = compute_q_pi(task_rewards, pol)
+		legibility = self.pol_legibility(tasks_q, eta)
+		it = 0
+		
+		while not stop:
+			
+			# print('Iteration: %d\t Legibility: %.8f' % (it+1, legibility), end='\r')
+			print('Iteration: %d\t Legibility: %.8f' % (it + 1, legibility))
+			# improve policy
+			theta_grad = theta_gradient(tasks_q, pol, theta, softmax_temp)
+			# print(theta_grad)
+			theta += learn_rate * theta_grad
+			# print(theta)
+			pol_new = get_policy(theta, softmax_temp)
+			
+			# eval policy
+			tasks_q = compute_q_pi(task_rewards, pol_new)
+			new_legibility = self.pol_legibility(tasks_q, eta)
+			improv = new_legibility - legibility
+			stop = (improv < improv_thresh)
+			it += 1
+			if not stop:
+				legibility = new_legibility
+				pol = pol_new
+		
+		print('Took %d iterations\t Legibility: %.8f' % (it + 1, legibility))
+		
+		if best_action:
+			pol_best = pol.max(axis=1, keepdims=True)
+			pol = np.isclose(pol, pol_best, atol=1e-10, rtol=1e-10).astype(int)
+			pol = pol / pol.sum(axis=1, keepdims=True)
+		
+		return pol
 
 
 class LearnerMDP(object):
