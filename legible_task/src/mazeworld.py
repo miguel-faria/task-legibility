@@ -4,6 +4,7 @@ from termcolor import colored
 from abc import ABC
 from itertools import combinations, permutations
 
+
 #############################
 #### Vanilla Maze Worlds ####
 #############################
@@ -612,6 +613,7 @@ class LimitedCollectMazeWorld(MazeWorld):
                             c[state_idx, action_idx] = 0.9
 
         return c
+
 
 ################################
 #### Maze Worlds with Walls ####
@@ -1527,6 +1529,7 @@ class LimitedCollectWallMazeWorld(WallMazeWorld):
                             c[state_idx, action_idx] = 0.9
 
         return c
+
 
 ###########################################
 #### Simplified Maze Worlds with Walls ####

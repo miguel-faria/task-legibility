@@ -76,7 +76,7 @@ class Utilities(object):
 
 class MDP(object):
 	
-	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], c: np.ndarray, gamma: float, goal_states: List[str], feedback_type: str):
+	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], c: np.ndarray, gamma: float, goal_states: List[int], feedback_type: str):
 		self._mdp = (x, a, p, c, gamma)
 		self._goal_states = goal_states
 		if feedback_type.lower().find('cost') != -1 or feedback_type.lower().find('reward') != -1:
@@ -254,6 +254,7 @@ class MDP(object):
 		actions = []
 		x = list(X).index(x0)
 		stop = False
+		i = 0
 		
 		while not stop:
 			a = np.random.choice(nA, p=pol[x, :])
@@ -261,14 +262,16 @@ class MDP(object):
 			
 			traj += [X[x]]
 			actions += [A[a]]
-			
-			stop = (X[x] in self._goal_states)
+
+			stop = (x in self._goal_states or i > 500)
 			if stop:
 				actions += [A[np.random.choice(nA, p=pol[x, :])]]
+
+			i += 1
 		
 		return np.array(traj), np.array(actions)
 	
-	def all_trajectories(self, x0:str, pol: np.ndarray) -> (np.ndarray, np.ndarray):
+	def all_trajectories(self, x0: str, pol: np.ndarray) -> (np.ndarray, np.ndarray):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
@@ -281,14 +284,16 @@ class MDP(object):
 		acts = []
 		started_trajs = [[[x0], []]]
 		stop = False
-		
+
 		while not stop:
+
 			traj = started_trajs[i][0]
 			a_traj = started_trajs[i][1]
 			x = list(X).index(traj[-1])
 			stop_inner = False
 			it = 0
 			add_traj = False
+
 			while not stop_inner:
 				if x in self._goal_states:
 					a_traj += [A[np.random.choice(nA, p=pol[x, :])]]
@@ -323,24 +328,27 @@ class MDP(object):
 						add_traj = True
 					
 					else:
-						if it > 1000:
+						if it > 500:
 							stop_inner = True
 					
 					it += 1
 			
 			i += 1
-			stop = (i >= len(started_trajs) or i > 1000)
+			stop = (i >= len(started_trajs) or i > 500)
 			if add_traj:
 				trajs += [np.array(traj)]
 				acts += [np.array(a_traj)]
 		
 		return np.array(trajs, dtype=object), np.array(acts, dtype=object)
 	
-	def trajectory_reward(self, trajs: np.ndarray) -> float:
+	def trajectory_reward(self, trajs: np.ndarray, task_idx: int = None) -> float:
 		r_avg = 0
 		X = list(self._mdp[0])
 		A = list(self._mdp[1])
-		c = self._mdp[3]
+		if task_idx is not None:
+			c = self._mdp[3][task_idx]
+		else:
+			c = self._mdp[3]
 		gamma = self._mdp[4]
 		n_trajs = len(trajs)
 		
@@ -362,11 +370,30 @@ class MDP(object):
 		
 		return r_avg
 
+	def avg_dist(self, x0: str, pol: np.ndarray) -> int:
+
+		trajs, _ = self.all_trajectories(x0, pol)
+		dist = 0
+		n_trajs = len(trajs)
+		for traj in trajs:
+			dist += len(traj) / n_trajs
+
+		return math.ceil(dist)
+
+	def policy_dist(self, pol: np.ndarray) -> np.ndarray:
+
+		dists = np.zeros(len(self.states))
+		states = list(self.states)
+		for x in states:
+			dists[states.index(x)] = self.avg_dist(x, pol)
+
+		return dists
+
 
 class LegibleTaskMDP(MDP):
 	
 	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, task: str, task_states: List[Tuple[int, int, str]], tasks: List[str],
-				 beta: float, goal_states: List[str], sign: int, leg_func: str, q_mdps: Dict[str, np.ndarray], v_mdps: Dict[str, np.ndarray]):
+				 beta: float, goal_states: List[int], sign: int, leg_func: str, q_mdps: Dict[str, np.ndarray], v_mdps: Dict[str, np.ndarray], dists: np.ndarray):
 		self._legible_functions = {'leg_optimal': self.optimal_legible_cost, 'leg_weight': self.legible_cost}
 		self._task = task
 		self._tasks = tasks
@@ -386,7 +413,7 @@ class LegibleTaskMDP(MDP):
 			for t in range(nT):
 				for i in range(nX):
 					for j in range(nA):
-						c[t, i, j] = self._legible_functions[leg_func](i, j, t, sign)
+						c[t, i, j] = self._legible_functions[leg_func](i, j, t, sign, dists)
 			
 			self._mdp = (x, a, p, c, gamma)
 		
@@ -395,7 +422,7 @@ class LegibleTaskMDP(MDP):
 						  'red'))
 			return
 	
-	def update_cost_function(self, legible_func: str, sign: int):
+	def update_cost_function(self, legible_func: str, sign: int, dists: np.ndarray):
 		mdp = self.mdp
 		x = mdp[0]
 		a = mdp[1]
@@ -410,7 +437,7 @@ class LegibleTaskMDP(MDP):
 			for t in range(nT):
 				for i in range(nX):
 					for j in range(nA):
-						c[t, i, j] = self._legible_functions[legible_func](i, j, t, sign)
+						c[t, i, j] = self._legible_functions[legible_func](i, j, t, sign, dists)
 			
 			self._mdp = (x, a, p, c, gamma)
 		
@@ -419,7 +446,7 @@ class LegibleTaskMDP(MDP):
 						  'red'))
 			return
 	
-	def optimal_legible_cost(self, x: int, a: int, t: int, sign: int) -> float:
+	def optimal_legible_cost(self, x: int, a: int, t: int, sign: int, dist: np.ndarray) -> float:
 		task_cost = np.exp(sign * self._beta * self._tasks_q[self._tasks[t]][x, a])
 		tasks_sum = task_cost
 		for task in self._tasks:
@@ -427,44 +454,15 @@ class LegibleTaskMDP(MDP):
 				tasks_sum += np.exp(sign * self._beta * self._tasks_q[task][x, a])
 		
 		return task_cost / tasks_sum
-	
-	def legible_cost(self,  x: int, a: int, t: int, sign: int) -> float:
-		X = self._mdp[0]
-		A = self._mdp[1]
-		P = self._mdp[2]
-		
-		sa_prob = self.optimal_legible_cost(x, a, t, sign)
-		
-		nxt_states = np.nonzero(P[A[a]][x, :])[0]
-		
-		x_dist_ratio = 0
-		
-		for state in nxt_states:
-			state_prob = P[A[a]][x, state]
-			
-			state_split = re.match(r"([0-9]+) ([0-9]+) ([a-zA-z]+)", X[state], re.I)
-			row = int(state_split.group(1))
-			col = int(state_split.group(2))
-			
-			task_dist = math.inf
-			for task in self._task_states.keys( ):
-				task_state = self._task_states[task]
-				dist = math.sqrt((row - task_state[0]) ** 2 + (col - task_state[1]) ** 2)
-				if dist < task_dist:
-					task_dist = dist
-			
-			goal_dist = math.inf
-			for goal in self._tasks[t]:
-				dist = math.sqrt((row - self._task_states[goal][0]) ** 2 + (col - self._task_states[goal][1]) ** 2)
-				if dist < goal_dist:
-					goal_dist = dist
-			
-			try:
-				x_dist_ratio += state_prob * min(task_dist / goal_dist, 1.0)
-			except ZeroDivisionError:
-				x_dist_ratio += state_prob
-		
-		return sa_prob * x_dist_ratio
+
+	def legible_cost(self,  x: int, a: int, t: int, sign: int, dist: np.ndarray) -> float:
+		task_cost = np.exp(sign * self._beta * self._tasks_q[self._tasks[t]][x, a]) / (1 / dist[t, x])
+		tasks_sum = task_cost
+		for task in self._tasks:
+			if task != self._tasks[t]:
+				tasks_sum += np.exp(sign * self._beta * self._tasks_q[task][x, a]) / (1 / dist[self._tasks.index(task), x])
+
+		return task_cost / tasks_sum
 
 	def pol_legibility(self, tasks_q_pi: Dict[str, np.ndarray], eta: float) -> float:
 		
@@ -798,13 +796,20 @@ class LearnerMDP(object):
 
 
 def main( ):
-	from mazeworld import AutoCollectMazeWord, LimitedCollectMazeWorld
+	import yaml
+	from mazeworld import AutoCollectMazeWord, LimitedCollectMazeWorld, SimpleWallMazeWorld2
 	
-	def get_goal_states(states, goal):
-		state_lst = list(states)
-		return [state_lst.index(x) for x in states if x.find(goal) != -1]
+	def get_goal_states(states, goal, with_objs=True, goals=None):
+		if with_objs:
+			state_lst = list(states)
+			return [state_lst.index(x) for x in states if x.find(goal) != -1]
+		else:
+			state_lst = list(states)
+			for g in goals:
+				if g[2].find(goal) != -1:
+					return [state_lst.index(str(g[0]) + ' ' + str(g[1]))]
 	
-	def simulate(mdp, pol, mdp_tasks, leg_pol, x0, n_trajs):
+	def simulate(mdp, pol, mdp_tasks, leg_pol, x0, n_trajs, goal):
 		mdp_trajs = []
 		tasks_trajs = []
 		
@@ -815,118 +820,71 @@ def main( ):
 			tasks_trajs += [[traj_leg, acts_leg]]
 		
 		mdp_r = mdp.trajectory_reward(mdp_trajs)
-		mdp_rl = mdp_tasks.trajectory_reward(mdp_trajs)
+		mdp_rl = mdp_tasks.trajectory_reward(mdp_trajs, goal)
 		task_r = mdp.trajectory_reward(tasks_trajs)
-		task_rl = mdp_tasks.trajectory_reward(tasks_trajs)
+		task_rl = mdp_tasks.trajectory_reward(tasks_trajs, goal)
 		
 		return mdp_r, mdp_rl, task_r, task_rl
-	
-	n_rows = 8
-	n_cols = 10
-	# objs_states = [(7, 2, 'P'), (4, 9, 'D'), (2, 7, 'C')]
-	objs_states = [(7, 2, 'P'), (4, 9, 'D'), (2, 7, 'C'), (2, 4, 'L'), (5, 5, 'T'), (8, 6, 'O')]
-	# x0 = np.random.choice([x for x in X_a if 'N' in x])
+
+	WORLD_CONFIGS = {1: '8x8_world.yaml', 2: '10x10_world.yaml', 3: '8x8_world_2.yaml', 4: '10x10_world_2.yaml'}
+	world = 2
+
+	with open('../data/configs/' + WORLD_CONFIGS[world]) as file:
+		config_params = yaml.full_load(file)
+
+		n_cols = config_params['n_cols']
+		n_rows = config_params['n_rows']
+		walls = config_params['walls']
+		task_states = config_params['task_states']
+		tasks = config_params['tasks']
 	x0 = '1 1 N'
-	# goals = ['P', 'D', 'C']
-	goals = ['P', 'D', 'C', 'L', 'T', 'O']
-	goal = 'D'
-	
+	goal = 'T'
 	print('Initial State: ' + x0)
-	print('######################################')
-	print('#####   Auto Collect Maze World  #####')
-	print('######################################')
+
+	print('#######################################')
+	print('#####   Legible MDPs Application  #####')
+	print('#######################################')
 	print('### Generating World ###')
-	acmw = AutoCollectMazeWord( )
-	X_a, A_a, P_a = acmw.generate_world(n_rows, n_cols, objs_states)
+	acmw = SimpleWallMazeWorld2()
+	X_w, A_w, P_w = acmw.generate_world(n_rows, n_cols, task_states, walls, 'stochastic', 0.15)
 	
-	print('### Computing Costs and Creating Task MDPs ###')
-	mdps_a = { }
-	for i in tqdm(range(len(goals)), desc='Single Task MDPs'):
-		c = acmw.generate_costs_varied(goals[i], X_a, A_a, P_a)
-		mdp = MDP(X_a, A_a, P_a, c, 0.9, get_goal_states(X_a, goals[i]))
-		mdps_a['mdp' + str(i + 1)] = mdp
+	print('### Creating MDPs ###')
+	mdps = { }
+	v_mdps_w = {}
+	q_mdps_w = {}
+	dists = []
+	print('Optimal task MDPs')
+	for i in tqdm(range(len(tasks)), desc='Optimal Task MDPs'):
+		c = acmw.generate_rewards(tasks[i], X_w, A_w)
+		mdp = MDP(X_w, A_w, P_w, c, 0.9, get_goal_states(X_w, tasks[i]), 'rewards')
+		pol, q = mdp.policy_iteration()
+		v = Utilities.v_from_q(q, pol)
+		q_mdps_w[tasks[i]] = q
+		v_mdps_w[tasks[i]] = v
+		dists += [mdp.policy_dist(pol)]
+		mdps['mdp' + str(i + 1)] = mdp
+	dists = np.array(dists)
 	print('Legible task MDP')
-	task_mdp_a = LegibleTaskMDP(X_a, A_a, P_a, 0.9, goal, goals, list(mdps_a.values( )), 2.0,
-								get_goal_states(X_a, goal))
+	task_mdp = LegibleTaskMDP(X_w, A_w, P_w, 0.9, goal, tasks, tasks, 2.0, get_goal_states(X_w, goal), 1, 'leg_weight', q_mdps=q_mdps_w, v_mdps=v_mdps_w,
+							  dists=dists)
 	
 	print('### Computing Optimal policy ###')
 	time1 = time.time( )
-	pol_a, Q_a = mdps_a['mdp' + str(goals.index(goal) + 1)].policy_iteration( )
+	goal_idx = tasks.index(goal)
+	opt_pol, _ = mdps['mdp' + str(goal_idx + 1)].policy_iteration()
 	print('Took %.3f seconds to compute policy' % (time.time( ) - time1))
 	
 	print('### Computing Legible policy ###')
 	time1 = time.time( )
-	task_pol_a, task_Q_a = task_mdp_a.policy_iteration( )
+	leg_pol, _ = task_mdp.policy_iteration( )
 	print('Took %.3f seconds to compute policy' % (time.time( ) - time1))
 	
-	print('#######################################')
-	print('#####   Limit Collect Maze World  #####')
-	print('#######################################')
-	print('### Generating World ###')
-	cmw = LimitedCollectMazeWorld( )
-	X_l, A_l, P_l = cmw.generate_world(n_rows, n_cols, objs_states)
-	
-	print('### Computing Costs and Creating Task MDPs ###')
-	mdps_l = { }
-	for i in range(len(goals)):
-		c = acmw.generate_costs_varied(goals[i], X_l, A_l, P_l)
-		mdp = MDP(X_l, A_l, P_l, c, 0.9, get_goal_states(X_l, goals[i]))
-		mdps_l['mdp' + str(i + 1)] = mdp
-	task_mdp_l = LegibleTaskMDP(X_l, A_l, P_l, 0.9, goal, goals, list(mdps_l.values( )), 2.0,
-								get_goal_states(X_l, goal))
-	
-	print('### Computing Optimal policy ###')
-	time1 = time.time( )
-	pol_l, Q1 = mdps_l['mdp' + str(goals.index(goal) + 1)].policy_iteration( )
-	print('Took %.3f seconds to compute policy' % (time.time( ) - time1))
-	
-	print('### Computing Legible policy ###')
-	time1 = time.time( )
-	task_pol_l, task_Q = task_mdp_l.policy_iteration( )
-	print('Took %.3f seconds to compute policy' % (time.time( ) - time1))
-	
-	print('######################################')
-	print('############ TRAJECTORIES ############')
-	print('######################################')
-	print('#####   Auto Collect Maze World  #####')
-	print('######################################')
-	# print('Optimal trajectory for task: ' + goal)
-	# t1, a1 = mdps_a[str(goals.index(goal) + 1)].trajectory(x0, pol_a)
-	# print(t1)
-	# print(a1)
-	#
-	# print('Legible trajectory for task: ' + goal)
-	# task_traj, task_act = task_mdp_a.trajectory(x0, task_pol_a)
-	# print(task_traj)
-	# print(task_act)
-	#
 	print('Getting model performance!!')
 	clock_1 = time.time( )
-	mdp_r, mdp_rl, leg_mdp_r, leg_mdp_rl = simulate(mdps_a['mdp' + str(goals.index(goal) + 1)], pol_a,
-													task_mdp_a, task_pol_a, x0, 10)
+	opt_mdp_r, opt_mdp_rl, leg_mdp_r, leg_mdp_rl = simulate(mdps['mdp' + str(goal_idx + 1)], opt_pol, task_mdp, leg_pol, x0, 10, goal_idx)
 	time_simulation = time.time( ) - clock_1
 	print('Simulation length = %.3f' % time_simulation)
-	print('Optimal Policy performance:\nReward: %.3f\nLegible Reward: %.3f' % (mdp_r, mdp_rl))
-	print('legible Policy performance:\nReward: %.3f\nLegible Reward: %.3f' % (leg_mdp_r, leg_mdp_rl))
-	print('#######################################')
-	print('#####   Limit Collect Maze World  #####')
-	print('#######################################')
-	# print('Optimal trajectory for task: ' + goal)
-	# t1, a1 = mdps_l[str(goals.index(goal) + 1)].trajectory(x0, pol_l)
-	# print(t1)
-	# print(a1)
-	#
-	# print('Legible trajectory for task: ' + goal)
-	# task_traj, task_act = task_mdp_l.trajectory(x0, task_pol_l)
-	# print(task_traj)
-	# print(task_act)
-	print('Getting model performance!!')
-	clock_1 = time.time( )
-	mdp_r, mdp_rl, leg_mdp_r, leg_mdp_rl = simulate(mdps_l['mdp' + str(goals.index(goal) + 1)], pol_l,
-													task_mdp_l, task_pol_l, x0, 10)
-	time_simulation = time.time( ) - clock_1
-	print('Simulation length = %.3f' % time_simulation)
-	print('Optimal Policy performance:\nReward: %.3f\nLegible Reward: %.3f' % (mdp_r, mdp_rl))
+	print('Optimal Policy performance:\nReward: %.3f\nLegible Reward: %.3f' % (opt_mdp_r, opt_mdp_rl))
 	print('legible Policy performance:\nReward: %.3f\nLegible Reward: %.3f' % (leg_mdp_r, leg_mdp_rl))
 
 
