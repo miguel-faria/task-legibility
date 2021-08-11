@@ -14,10 +14,15 @@ from typing import List, Dict, Tuple
 
 
 def main():
-
-    def get_goal_states(states, goal) -> List[str]:
-
-        return [x for x in states if x.find(goal) != -1]
+    def get_goal_states(states, goal, with_objs=True, goals=None):
+        if with_objs:
+            state_lst = list(states)
+            return [state_lst.index(x) for x in states if x.find(goal) != -1]
+        else:
+            state_lst = list(states)
+            for g in goals:
+                if g[2].find(goal) != -1:
+                    return [state_lst.index(str(g[0]) + ' ' + str(g[1]))]
 
     WORLD_CONFIGS = {1: '8x8_world.yaml', 2: '10x10_world.yaml', 3: '8x8_world_2.yaml', 4: '10x10_world_2.yaml'}
 
@@ -81,6 +86,7 @@ def main():
     task_mdps_w = {}
     task_mdp_pols = {}
     costs = []
+    dists = []
     print('Optimal task MDPs')
     for i in tqdm(range(len(tasks)), desc='Optimal Task MDPs'):
         c = wacmw.generate_rewards(tasks[i], X_w, A_w)
@@ -90,14 +96,16 @@ def main():
         v = Utilities.v_from_q(q, pol)
         q_mdps_w[tasks[i]] = q
         v_mdps_w[tasks[i]] = v
+        dists += [mdp.policy_dist(pol)]
         mdp_pols['mdp_' + str(i + 1)] = pol
         mdps_w['mdp_' + str(i + 1)] = mdp
     print('Legible task MDPs')
     leg_costs = []
+    dists = np.array(dists)
     for i in tqdm(range(len(tasks)), desc='Legible Task MDPs'):
         mdp = LegibleTaskMDP(X_w, A_w, P_w, 0.9, tasks[i], task_states, tasks, 0.5, get_goal_states(X_w, tasks[i]), 1,
-                             leg_func, q_mdps=q_mdps_w, v_mdps=v_mdps_w)
-        leg_pol = mdp.policy_iteration(i)
+                             leg_func, q_mdps=q_mdps_w, v_mdps=v_mdps_w, dists=dists)
+        leg_pol, _ = mdp.policy_iteration(i)
         leg_costs += [mdp.costs[i, :]]
         task_mdps_w['leg_mdp_' + str(i + 1)] = mdp
         task_mdp_pols['leg_mdp_' + str(i + 1)] = leg_pol
