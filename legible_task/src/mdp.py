@@ -142,11 +142,11 @@ class MDP(object):
 		
 		return J[:, None]
 	
-	def value_iteration(self, task_idx: float = None) -> np.ndarray:
+	def value_iteration(self, task_idx: int = None) -> np.ndarray:
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
-		if task_idx:
+		if task_idx is not None:
 			c = self._mdp[3][task_idx]
 		else:
 			c = self._mdp[3]
@@ -175,11 +175,11 @@ class MDP(object):
 		
 		return J[:, None]
 	
-	def policy_iteration(self, task_idx: float = None) -> (np.ndarray, np.ndarray):
+	def policy_iteration(self, task_idx: int = None) -> (np.ndarray, np.ndarray):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
-		if task_idx:
+		if task_idx is not None:
 			c = self._mdp[3][task_idx]
 		else:
 			c = self._mdp[3]
@@ -262,7 +262,7 @@ class MDP(object):
 			traj += [X[x]]
 			actions += [A[a]]
 			
-			stop = (x in self._goal_states)
+			stop = (X[x] in self._goal_states)
 			if stop:
 				actions += [A[np.random.choice(nA, p=pol[x, :])]]
 		
