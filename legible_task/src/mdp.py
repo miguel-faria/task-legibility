@@ -1,12 +1,15 @@
 #! /usr/bin/env python
 
+from __future__ import annotations
 import numpy as np
 import time
 import math
 import re
+from abc import ABC
 from tqdm import tqdm
 from termcolor import colored
 from typing import List, Dict, Tuple
+# from mcts import MiuraMDPMCTSNode
 
 
 class Utilities(object):
@@ -106,7 +109,7 @@ class MDP(object):
 		return self._mdp[4]
 	
 	@property
-	def goals(self) -> List[str]:
+	def goals(self) -> List[int]:
 		return self._goal_states
 	
 	@property
@@ -549,6 +552,193 @@ class LegibleTaskMDP(MDP):
 			pol = pol / pol.sum(axis=1, keepdims=True)
 		
 		return pol
+
+
+class MiuraLegibleMDP(MDP):
+	
+	class MCTSMDPNode(ABC):
+		
+		def __init__(self, num_actions: int, node_state: int, mdp: MDP, parent_node=None, terminal: bool = False):
+			self._num_actions = num_actions
+			self._q = np.zeros(self._num_actions)
+			self._n = np.ones(self._num_actions)
+			self._state = node_state
+			self._parent = parent_node
+			self._children = dict()
+			self._terminal = terminal
+			self._mdp = mdp
+		
+		def expand(self, action: str, depth: int, discount: float, goal_states: List[int], pol: np.ndarray) -> (float, List[Tuple]):
+			act_idx = list(self._mdp.actions).index(action)
+			next_node, reward = self.simulate_action(action, goal_states)
+			
+			if self._terminal:
+				action_reward = reward
+				history = [(self._mdp.states[self._state],)]
+			
+			else:
+				future_reward, future_choices = next_node.rollout(depth - 1, discount, goal_states, pol)
+				action_reward = reward + discount * future_reward
+				history = [(self._mdp.states[self._state], action)] + future_choices
+			
+			self._n[act_idx] += 1
+			self._q[act_idx] += (action_reward - self._q[act_idx]) / self._n[act_idx]
+			
+			return action_reward, history
+		
+		def rollout(self, depth: int, discount: float, goal_states: List[int], pol: np.ndarray) -> (float, List[Tuple]):
+			
+			A = self._mdp.actions
+			if depth == 0:
+				return 0.0, [(self._mdp.states[self._state],)]
+			
+			action = A[np.random.choice(range(self._num_actions), p=pol[self._state, :])]
+			next_node, reward = self.simulate_action(action, goal_states)
+			
+			if self._terminal:
+				return reward, [(self._mdp.states[self._state],)]
+			else:
+				future_reward, future_choices = next_node.rollout(depth - 1, discount, goal_states, pol)
+				return reward + discount * future_reward, [(self._mdp.states[self._state], action)] + future_choices
+		
+		def simulate_action(self, action: str, goal_states: List[int]) -> (int, float):
+			nX = len(self._mdp.states)
+			A = list(self._mdp.actions)
+			act_idx = A.index(action)
+			P = self._mdp.transitions_prob
+			c = self._mdp.costs
+			
+			next_state = np.random.choice(nX, p=P[action][self._state, :])
+			reward = c[next_state, act_idx]
+			
+			terminal_state = next_state in goal_states
+			next_node = MiuraLegibleMDP.MCTSMDPNode(self._num_actions, next_state, self._mdp, self, terminal_state)
+			return next_node, reward
+		
+		def simulate(self, depth: int, exploration: float, discount_factor: float, visited_nodes: List['MCTSMDPNode'],
+					 goal_states: List[int], pol: np.ndarray) -> float:
+			A = self._mdp.actions
+			if depth == 0:
+				return 0.0
+			
+			if self not in visited_nodes:
+				visited_nodes.append(self)
+				for act_idx in range(self._num_actions):
+					self.expand(A[act_idx], depth, discount_factor, goal_states, pol)
+				node = self
+			else:
+				node = visited_nodes[visited_nodes.index(self)]
+			
+			act_idx = node.ucb_alternative().argmax()
+			q, history = self.expand(A[act_idx], depth, discount_factor, goal_states, pol)
+			
+			return q
+		
+		def ucb(self, c: float) -> np.ndarray:
+			return self._q + c * np.sqrt(2 * np.log(self._n.sum()) / self._n)
+		
+		def ucb_alternative(self) -> np.ndarray:
+			return self._q + self._q * np.sqrt(2 * np.log(self._n.sum()) / self._n)
+		
+		def uct(self, goal_states: List[int], max_iterations: int, max_depth: int, exploration: float, pol: np.ndarray) -> int:
+			visited_nodes = []
+			for _ in tqdm(range(max_iterations)):
+				self.simulate(max_depth, exploration, self._mdp.mdp[4], visited_nodes, goal_states, pol)
+			
+			return self._q.argmin()
+	
+	class MiuraMDPMCTSNode(MCTSMDPNode):
+		
+		def __init__(self, num_actions: int, node_state: int, mdp: 'MiuraLegibleMDP', belief: np.ndarray,
+					 parent_node=None, terminal: bool = False):
+			super(MiuraLegibleMDP.MiuraMDPMCTSNode, self).__init__(num_actions, node_state, mdp, parent_node, terminal)
+			self._belief = belief
+			self._objectives = mdp.tasks
+			self._objective = mdp.goal
+		
+		def simulate_action(self, action: str, goal_states: List[int]) -> (int, float):
+			nX = len(self._mdp.states)
+			P = self._mdp.transitions_prob
+			
+			next_state = np.random.choice(nX, p=P[action][self._state, :])
+			belief = self._mdp.update_belief(self._state, action, next_state, self._belief)
+			reward = self._mdp.belief_reward(belief[self._objectives.index(self._objective)])
+			
+			terminal_state = next_state in goal_states
+			next_node = MiuraLegibleMDP.MiuraMDPMCTSNode(self._num_actions, next_state, self._mdp, belief, self, terminal_state)
+			return next_node, reward
+	
+	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, task: str, tasks: List[str], beta: float, goal_states: List[int],
+				 q_mdps: Dict[str, np.ndarray]):
+		
+		nX = len(x)
+		nA = len(a)
+		nT = len(tasks)
+		c = np.zeros((nT, nX, nA))
+		super().__init__(x, a, p, c, gamma, goal_states, 'rewards')
+		self._q_mdps = q_mdps
+		self._beta = beta
+		self._goal = task
+		self._tasks = tasks
+	
+	@property
+	def tasks(self):
+		return self._tasks
+	
+	@property
+	def goal(self):
+		return self._goal
+	
+	def belief_reward(self, belief: float) -> float:
+		return -np.abs(belief - 1)
+	
+	def update_belief(self, x: int, a: str, x1: int, curr_belief: np.ndarray) -> np.ndarray:
+		
+		A = list(self._mdp[1])
+		P = self._mdp[2]
+		a_idx = A.index(a)
+		new_belief = np.zeros(len(self._tasks))
+		for task in self._tasks:
+			task_idx = self._tasks.index(task)
+			new_belief[task_idx] = P[a][x, x1] * np.exp(self._beta * self._q_mdps[task][x, a_idx]) * curr_belief[task_idx]
+
+		return new_belief / new_belief.sum()
+
+	def legible_trajectory(self, x0: str, pol: np.ndarray, depth: int, n_its: int, beta: float) -> (np.ndarray, np.ndarray):
+		X = self._mdp[0]
+		A = self._mdp[1]
+		P = self._mdp[2]
+		
+		nX = len(X)
+		nA = len(A)
+		nT = len(self._tasks)
+		
+		traj = [x0]
+		actions = []
+		x = list(X).index(x0)
+		stop = False
+		i = 0
+		
+		init_belief = np.ones(nT) / nT
+		
+		while not stop:
+			
+			uct_node = MiuraLegibleMDP.MiuraMDPMCTSNode(nA, x, self, init_belief)
+			a = uct_node.uct(self._goal_states, n_its, depth, beta, pol)
+			print(X[x], A[a])
+			x = np.random.choice(nX, p=P[A[a]][x, :])
+			
+			traj += [X[x]]
+			actions += [A[a]]
+			
+			stop = (x in self._goal_states or i > 500)
+			if stop:
+				uct_node = MiuraLegibleMDP.MiuraMDPMCTSNode(nA, x, self, init_belief)
+				actions += [A[uct_node.uct(self._goal_states, 1000, 20, 0.25, pol)]]
+			
+			i += 1
+		
+		return np.array(traj), np.array(actions)
 
 
 class LearnerMDP(object):

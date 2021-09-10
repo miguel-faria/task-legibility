@@ -1,9 +1,12 @@
+#! /usr/bin/env python
+
 import numpy as np
 
 from tqdm import tqdm
+from typing import List, Dict, Tuple
 
 
-def value_iteration(mdp):
+def value_iteration(mdp: Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float]) -> np.ndarray:
     X = mdp[0]
     A = mdp[1]
     P = mdp[2]
@@ -32,7 +35,7 @@ def value_iteration(mdp):
     return J[:, None]
 
 
-def policy_iteration(mdp):
+def policy_iteration(mdp: Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float]) -> (np.ndarray, np.ndarray):
     X = mdp[0]
     A = mdp[1]
     P = mdp[2]
@@ -72,7 +75,8 @@ def policy_iteration(mdp):
     return pol, Q
 
 
-def trajectory(mdp, x0, pol, goal_states):
+def trajectory(mdp: Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float], x0: str,
+               pol: np.ndarray, goal_states: List[int]) -> (np.ndarray, np.ndarray):
     X = mdp[0]
     A = mdp[1]
     P = mdp[2]
@@ -99,7 +103,7 @@ def trajectory(mdp, x0, pol, goal_states):
     return np.array(traj), np.array(actions)
 
 
-def trajectory_reward(mdp, trajs):
+def trajectory_reward(mdp: Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float], trajs: np.ndarray) -> float:
     r_avg = 0
     X = list(mdp[0])
     A = list(mdp[1])
@@ -126,3 +130,5 @@ def trajectory_reward(mdp, trajs):
             progress_bar.update(1)
 
     return r_avg
+
+
