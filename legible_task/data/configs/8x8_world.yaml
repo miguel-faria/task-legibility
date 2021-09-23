@@ -6,7 +6,6 @@ task_states:
   - !!python/tuple [4, 1, 'C']
   - !!python/tuple [8, 1, 'L']
   - !!python/tuple [6, 7, 'T']
-  - !!python/tuple [8, 8, 'O']
 walls:
   - [!!python/tuple [0.5, 0.5], !!python/tuple [0.5, 1.5], !!python/tuple [0.5, 2.5], !!python/tuple [0.5, 3.5],
      !!python/tuple [0.5, 4.5], !!python/tuple [0.5, 5.5], !!python/tuple [0.5, 6.5], !!python/tuple [0.5, 7.5],
@@ -34,4 +33,4 @@ walls:
   - [!!python/tuple [4.5, 6.5], !!python/tuple [4.5, 7.5]]
   - [!!python/tuple [1.5, 7.5], !!python/tuple [2.5, 7.5], !!python/tuple [3.5, 7.5]]
   - [!!python/tuple [5.5, 7.5], !!python/tuple [6.5, 7.5], !!python/tuple [7.5, 7.5]]
-tasks: ['P', 'D', 'C', 'L', 'T', 'O']
+tasks: ['P', 'D', 'C', 'L', 'T']

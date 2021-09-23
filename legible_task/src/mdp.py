@@ -690,7 +690,7 @@ class MiuraLegibleMDP(MDP):
 		return self._goal
 	
 	def belief_reward(self, belief: float) -> float:
-		return -np.abs(belief - 1)
+		return -np.sqrt(1**2 - belief**2)
 	
 	def update_belief(self, x: int, a: str, x1: int, curr_belief: np.ndarray) -> np.ndarray:
 		
@@ -725,7 +725,7 @@ class MiuraLegibleMDP(MDP):
 			
 			uct_node = MiuraLegibleMDP.MiuraMDPMCTSNode(nA, x, self, init_belief)
 			a = uct_node.uct(self._goal_states, n_its, depth, beta, pol)
-			print(X[x], A[a])
+			# print(X[x], A[a])
 			x = np.random.choice(nX, p=P[A[a]][x, :])
 			
 			traj += [X[x]]
