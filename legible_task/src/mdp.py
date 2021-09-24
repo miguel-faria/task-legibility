@@ -740,6 +740,41 @@ class MiuraLegibleMDP(MDP):
 		
 		return np.array(traj), np.array(actions)
 
+	def trajectory_reward(self, trajs: np.ndarray, task_idx: int = None) -> float:
+		
+		r_ave = 0
+		X = list(self.states)
+		gamma = self.gamma
+		n_trajs = len(trajs)
+		
+		with tqdm(total=n_trajs) as progress_bar:
+			for traj in trajs:
+				
+				states = traj[0]
+				actions = traj[1]
+				traj_len = len(states)
+				curr_belief = np.zeros(len(self._tasks))
+				r_traj = 0
+				g = 1
+				
+				for i in range(traj_len):
+					
+					x = X.index(states[i])
+					a = actions[i]
+					if i < traj_len - 2:
+						x1 = X.index(states[i + 1])
+					else:
+						x1 = x
+					
+					curr_belief = self.update_belief(x, a, x1, curr_belief)
+					r_traj += g * self.belief_reward(curr_belief[task_idx])
+					g *= gamma
+				
+			r_ave += r_traj / n_trajs
+			progress_bar.update(1)
+	  
+		return r_ave
+
 
 class LearnerMDP(object):
 	
