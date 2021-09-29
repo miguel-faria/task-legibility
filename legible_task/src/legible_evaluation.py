@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+import sys
+import time
 
 import numpy as np
 import timeit
@@ -13,10 +15,8 @@ from mazeworld import SimpleWallMazeWorld2
 from typing import Dict, List, Tuple
 from termcolor import colored
 
-# SCALABILITY_WORLDS = {1: '5x5_world.yaml', 2: '10x10_world_2.yaml', 3: '25x25_world.yaml',
-# 					  4: '50x50_world.yaml', 5: '75x75_world.yaml', 6: '100x100_world.yaml',
-# 					  7: '150x150_world.yaml', 8: '200x200_world.yaml'}
-SCALABILITY_WORLDS = {2: '10x10_world_2.yaml'}
+SCALABILITY_WORLDS = {1: '10x10_world_2.yaml', 2: '25x25_world.yaml', 3: '50x50_world.yaml', 4: '75x75_world.yaml', 5: '100x100_world.yaml'}
+# 						, 6: '125x125_world.yaml', 7: '150x150_world.yaml'}
 
 OBJECTS_WORLDS = {1: '100x100_world.yaml', 2: '100x100_world_2.yaml', 3: '100x100_world_3.yaml',
 				  4: '100x100_world_4.yaml', 5: '100x100_world_5.yaml', 6: '100x100_world_6.yaml'}
@@ -88,24 +88,30 @@ def frameworks_evaluation(evaluation: str, n_reps: int, fail_prob: float, beta: 
 	else:
 		raise IncorrectEvaluationTypeError(evaluation)
 	
-	for _ in tqdm(range(n_reps), desc='Evaluation Repetitions'):
-		for idx in worlds_keys:
+	print('Started Evaluation process')
+	for idx in worlds_keys:
+	
+		print('Starting evaluation for world: ' + str(idx))
+	
+		# Load mazeworld information
+		with open('../data/configs/' + SCALABILITY_WORLDS[idx]) as file:
+			config_params = yaml.full_load(file)
+			
+			n_cols = config_params['n_cols']
+			n_rows = config_params['n_rows']
+			walls = config_params['walls']
+			task_states = config_params['task_states']
+			tasks = config_params['tasks']
 		
-			# Load mazeworld information
-			with open('../data/configs/' + SCALABILITY_WORLDS[idx]) as file:
-				config_params = yaml.full_load(file)
-				
-				n_cols = config_params['n_cols']
-				n_rows = config_params['n_rows']
-				walls = config_params['walls']
-				task_states = config_params['task_states']
-				tasks = config_params['tasks']
-				
-			# Setup mazeworld, mdps goal and goal states
-			swmw = SimpleWallMazeWorld2()
-			X_w, A_w, P_w = swmw.generate_world(n_rows, n_cols, task_states, walls, 'stochastic', fail_prob)
-			nX = len(X_w)
-			nA = len(A_w)
+		# Setup mazeworld
+		swmw = SimpleWallMazeWorld2()
+		X_w, A_w, P_w = swmw.generate_world(n_rows, n_cols, task_states, walls, 'stochastic', fail_prob)
+		nX = len(X_w)
+		nA = len(A_w)
+		
+		for iteration in tqdm(range(n_reps), desc='Evaluation Repetitions'):
+			
+			# Choose current goal and obtain the corresponding goal states
 			goal = np.random.choice(tasks)
 			goal_states = get_goal_states(X_w, goal)
 			
@@ -191,6 +197,9 @@ def frameworks_evaluation(evaluation: str, n_reps: int, fail_prob: float, beta: 
 			else:
 				raise InvalidEvaluationMetric(metric)
 
+			if iteration % 100 == 0:
+				print('Reached iteration %d!! Completed %.2f%% of the repetitions\n\n' % (iteration, iteration / n_reps * 100))
+
 	return policy_eval, miura_eval
 
 
@@ -221,11 +230,12 @@ def main():
 	gamma = args.gamma
 	
 	try:
+		print('Start time: ' + str(time.ctime()))
 		policy_results, miura_results = frameworks_evaluation(evaluation, n_reps, fail_prob, beta, gamma, metric)
 		results = {'policy': policy_results, 'miura': miura_results}
 		
 		fields = ['framework'] + list(policy_results.keys())
-		csv_file = 'evaluation_results_' + evaluation + '_' + metric + '.csv'
+		csv_file = '../data/results/evaluation_results_' + evaluation + '_' + metric + '.csv'
 		try:
 			with open(csv_file, 'w') as csvfile:
 				writer = csv.DictWriter(csvfile, fieldnames=fields)
@@ -235,8 +245,9 @@ def main():
 					row.update(val)
 					writer.writerow(row)
 		
-		except IOError:
-			print("I/O error")
+		except IOError as e:
+			print("I/O error: " + str(e))
+		print('End time: ' + str(time.ctime()))
 	
 	except IncorrectEvaluationTypeError:
 		print(colored('[ERROR] Invalid evaluation type, exiting program!', color='red'))

@@ -15,6 +15,27 @@ from typing import List, Dict, Tuple
 class Utilities(object):
 
 	@staticmethod
+	def q_from_pol(mdp: MDP, pol: np.ndarray, task_idx: int = None) -> np.ndarray:
+		
+		X = mdp.states
+		A = mdp.actions
+		P = mdp.transitions_prob
+		if task_idx is not None:
+			c = mdp.costs[task_idx]
+		else:
+			c = mdp.costs
+		gamma = mdp.gamma
+		nX, nA = len(X), len(A)
+		
+		q = np.zeros((nX, nA))
+		J = mdp.evaluate_pol(pol, task_idx)
+		
+		for act in range(nA):
+			q[:, act, None] = c[:, act, None] + gamma * P[A[act]].dot(J)
+		
+		return q
+
+	@staticmethod
 	def v_from_q(q: np.ndarray, pol: np.ndarray) -> np.ndarray:
 		return (q * pol).sum(axis=1)
 	
@@ -123,6 +144,11 @@ class MDP(object):
 	@goals.setter
 	def goals(self, goals: List[str]):
 		self._goal_states = goals
+	
+	def get_possible_states(self, q: np.ndarray) -> np.ndarray:
+		nonzerostates = np.nonzero(q.sum(axis=1))[0]
+		possible_states = [np.delete(nonzerostates, np.argwhere(nonzerostates == g)) for g in self._goal_states][0]
+		return possible_states
 	
 	def evaluate_pol(self, pol: np.ndarray, task_idx: int = None) -> np.ndarray:
 		X = self._mdp[0]
@@ -383,12 +409,15 @@ class MDP(object):
 
 		return math.ceil(dist)
 
-	def policy_dist(self, pol: np.ndarray) -> np.ndarray:
+	def policy_dist(self, pol: np.ndarray, task_idx: int = None) -> np.ndarray:
 
-		dists = np.zeros(len(self.states))
+		# dists = np.zeros(len(self.states))
+		dists = np.ones(len(self.states)) * 1000
 		states = list(self.states)
-		for x in states:
-			dists[states.index(x)] = self.avg_dist(x, pol)
+		q_pol = Utilities.q_from_pol(self, pol, task_idx)
+		possible_states = list(self.get_possible_states(q_pol))
+		for x in possible_states:
+			dists[x] = self.avg_dist(self.states[x], pol)
 
 		return dists
 
