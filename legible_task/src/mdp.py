@@ -100,9 +100,11 @@ class Utilities(object):
 
 class MDP(object):
 	
-	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], c: np.ndarray, gamma: float, goal_states: List[int], feedback_type: str):
+	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], c: np.ndarray, gamma: float, goal_states: List[int], feedback_type: str,
+				 verbose: bool):
 		self._mdp = (x, a, p, c, gamma)
 		self._goal_states = goal_states
+		self._verbose = verbose
 		if feedback_type.lower().find('cost') != -1 or feedback_type.lower().find('reward') != -1:
 			self._feedback_type = feedback_type
 		else:
@@ -137,6 +139,10 @@ class MDP(object):
 	def mdp(self) -> Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float]:
 		return self._mdp
 	
+	@property
+	def verbose(self) -> bool:
+		return self._verbose
+	
 	@mdp.setter
 	def mdp(self, mdp: Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float]):
 		self._mdp = mdp
@@ -144,6 +150,10 @@ class MDP(object):
 	@goals.setter
 	def goals(self, goals: List[str]):
 		self._goal_states = goals
+	
+	@verbose.setter
+	def verbose(self, verbose: bool):
+		self._verbose = verbose
 	
 	def get_possible_states(self, q: np.ndarray) -> np.ndarray:
 		nonzerostates = np.nonzero(q.sum(axis=1))[0]
@@ -227,7 +237,8 @@ class MDP(object):
 		i = 0
 		
 		while not quit:
-			print('Iteration %d' % (i + 1), end='\r')
+			if self._verbose:
+				print('Iteration %d' % (i + 1), end='\r')
 			
 			J = self.evaluate_pol(pol, task_idx)
 			
@@ -245,7 +256,8 @@ class MDP(object):
 			pol = polnew
 			i += 1
 		
-		print('N. iterations: ', i)
+		if self._verbose:
+			print('N. iterations: ', i)
 		
 		return pol, Q
 	
@@ -380,22 +392,27 @@ class MDP(object):
 			c = self._mdp[3]
 		gamma = self._mdp[4]
 		n_trajs = len(trajs)
+		t_idx = 1
 		
-		with tqdm(total=len(trajs)) as progress_bar:
-			for traj in trajs:
-				states = traj[0]
-				actions = traj[1]
-				r_traj = 0
-				g = 1
-				
-				for j in range(len(actions)):
-					x = states[j]
-					a = actions[j]
-					r_traj += g * c[X.index(x), A.index(a)]
-					g *= gamma
-				
-				r_avg += r_traj / n_trajs
-				progress_bar.update(1)
+		for traj in trajs:
+			states = traj[0]
+			actions = traj[1]
+			r_traj = 0
+			g = 1
+			
+			for idx in range(len(actions)):
+				x = states[idx]
+				a = actions[idx]
+				r_traj += g * c[X.index(x), A.index(a)]
+				g *= gamma
+			
+			r_avg += r_traj / n_trajs
+			if self._verbose:
+				print('MDP trajectory reward! Trajectory nr.%d. %.2f%% done' % (t_idx, t_idx / n_trajs * 100), end='\r')
+				t_idx += 1
+		
+		if self._verbose:
+			print('MDP trajectory reward finished!', end='\n')
 		
 		return r_avg
 
@@ -424,8 +441,9 @@ class MDP(object):
 
 class LegibleTaskMDP(MDP):
 	
-	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, task: str, task_states: List[Tuple[int, int, str]], tasks: List[str],
-				 beta: float, goal_states: List[int], sign: int, leg_func: str, q_mdps: Dict[str, np.ndarray], v_mdps: Dict[str, np.ndarray], dists: np.ndarray):
+	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, verbose: bool, task: str, task_states: List[Tuple[int, int, str]],
+				 tasks: List[str], beta: float, goal_states: List[int], sign: int, leg_func: str, q_mdps: Dict[str, np.ndarray], v_mdps: Dict[str, np.ndarray],
+				 dists: np.ndarray):
 		self._legible_functions = {'leg_optimal': self.optimal_legible_cost, 'leg_weight': self.legible_cost}
 		self._task = task
 		self._tasks = tasks
@@ -440,7 +458,7 @@ class LegibleTaskMDP(MDP):
 		nT = len(tasks)
 		c = np.zeros((nT, nX, nA))
 		
-		super().__init__(x, a, p, c, gamma, goal_states, 'rewards')
+		super().__init__(x, a, p, c, gamma, goal_states, 'rewards', verbose)
 		if leg_func in list(self._legible_functions.keys()):
 			for t in range(nT):
 				for i in range(nX):
@@ -554,8 +572,8 @@ class LegibleTaskMDP(MDP):
 		
 		while not stop:
 			
-			# print('Iteration: %d\t Legibility: %.8f' % (it+1, legibility), end='\r')
-			print('Iteration: %d\t Legibility: %.8f' % (it + 1, legibility))
+			if self._verbose:
+				print('Iteration: %d\t Legibility: %.8f' % (it + 1, legibility))
 			# improve policy
 			theta_grad = theta_gradient(tasks_q, pol, theta, softmax_temp)
 			# print(theta_grad)
@@ -573,7 +591,8 @@ class LegibleTaskMDP(MDP):
 				legibility = new_legibility
 				pol = pol_new
 		
-		print('Took %d iterations\t Legibility: %.8f' % (it + 1, legibility))
+		if self._verbose:
+			print('Took %d iterations\t Legibility: %.8f' % (it + 1, legibility))
 		
 		if best_action:
 			pol_best = pol.max(axis=1, keepdims=True)
@@ -669,9 +688,10 @@ class MiuraLegibleMDP(MDP):
 		def ucb_alternative(self) -> np.ndarray:
 			return self._q + self._q * np.sqrt(2 * np.log(self._n.sum()) / self._n)
 		
-		def uct(self, goal_states: List[int], max_iterations: int, max_depth: int, exploration: float, pol: np.ndarray) -> int:
+		def uct(self, goal_states: List[int], max_iterations: int, max_depth: int, exploration: float, pol: np.ndarray, verbose: bool) -> int:
 			visited_nodes = []
-			for _ in tqdm(range(max_iterations)):
+			iterator = tqdm(range(max_iterations)) if verbose else range(max_iterations)
+			for _ in iterator:
 				self.simulate(max_depth, exploration, self._mdp.mdp[4], visited_nodes, goal_states, pol)
 			
 			return self._q.argmin()
@@ -697,14 +717,14 @@ class MiuraLegibleMDP(MDP):
 			next_node = MiuraLegibleMDP.MiuraMDPMCTSNode(self._num_actions, next_state, self._mdp, belief, self, terminal_state)
 			return next_node, reward
 	
-	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, task: str, tasks: List[str], beta: float, goal_states: List[int],
-				 q_mdps: Dict[str, np.ndarray]):
+	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, verbose: bool, task: str, tasks: List[str], beta: float,
+				 goal_states: List[int], q_mdps: Dict[str, np.ndarray]):
 		
 		nX = len(x)
 		nA = len(a)
 		nT = len(tasks)
 		c = np.zeros((nT, nX, nA))
-		super().__init__(x, a, p, c, gamma, goal_states, 'rewards')
+		super().__init__(x, a, p, c, gamma, goal_states, 'rewards', verbose)
 		self._q_mdps = q_mdps
 		self._beta = beta
 		self._goal = task
@@ -733,7 +753,7 @@ class MiuraLegibleMDP(MDP):
 
 		return new_belief / new_belief.sum()
 
-	def legible_trajectory(self, x0: str, pol: np.ndarray, depth: int, n_its: int, beta: float) -> (np.ndarray, np.ndarray):
+	def legible_trajectory(self, x0: str, pol: np.ndarray, depth: int, n_its: int, beta: float, verbose: bool) -> (np.ndarray, np.ndarray):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
@@ -753,8 +773,7 @@ class MiuraLegibleMDP(MDP):
 		while not stop:
 			
 			uct_node = MiuraLegibleMDP.MiuraMDPMCTSNode(nA, x, self, init_belief)
-			a = uct_node.uct(self._goal_states, n_its, depth, beta, pol)
-			# print(X[x], A[a])
+			a = uct_node.uct(self._goal_states, n_its, depth, beta, pol, verbose)
 			x = np.random.choice(nX, p=P[A[a]][x, :])
 			
 			traj += [X[x]]
@@ -763,7 +782,7 @@ class MiuraLegibleMDP(MDP):
 			stop = (x in self._goal_states or i > 500)
 			if stop:
 				uct_node = MiuraLegibleMDP.MiuraMDPMCTSNode(nA, x, self, init_belief)
-				actions += [A[uct_node.uct(self._goal_states, 1000, 20, 0.25, pol)]]
+				actions += [A[uct_node.uct(self._goal_states, 1000, 20, 0.25, pol, verbose)]]
 			
 			i += 1
 		
@@ -775,32 +794,38 @@ class MiuraLegibleMDP(MDP):
 		X = list(self.states)
 		gamma = self.gamma
 		n_trajs = len(trajs)
+		t_idx = 1
 		
-		with tqdm(total=n_trajs) as progress_bar:
-			for traj in trajs:
+		for traj in trajs:
+			
+			states = traj[0]
+			actions = traj[1]
+			traj_len = len(states)
+			nT = len(self._tasks)
+			curr_belief = np.ones(nT) / nT
+			r_traj = 0
+			g = 1
+			
+			for i in range(traj_len):
 				
-				states = traj[0]
-				actions = traj[1]
-				traj_len = len(states)
-				curr_belief = np.zeros(len(self._tasks))
-				r_traj = 0
-				g = 1
+				x = X.index(states[i])
+				a = actions[i]
+				if i < traj_len - 2:
+					x1 = X.index(states[i + 1])
+				else:
+					x1 = x
 				
-				for i in range(traj_len):
-					
-					x = X.index(states[i])
-					a = actions[i]
-					if i < traj_len - 2:
-						x1 = X.index(states[i + 1])
-					else:
-						x1 = x
-					
-					curr_belief = self.update_belief(x, a, x1, curr_belief)
-					r_traj += g * self.belief_reward(curr_belief[task_idx])
-					g *= gamma
-				
+				curr_belief = self.update_belief(x, a, x1, curr_belief)
+				r_traj += g * (- self.belief_reward(curr_belief[task_idx]))
+				g *= gamma
+			
 			r_ave += r_traj / n_trajs
-			progress_bar.update(1)
+			if self._verbose:
+				print('Miura trajectory: trajectory nr.%d! Finished %.2f%% of trajectories' % (t_idx, t_idx / n_trajs * 100), end='\n')
+				t_idx += 1
+	  
+		if self._verbose:
+			print('Miura trajectory reward finished!', end='\n')
 	  
 		return r_ave
 
