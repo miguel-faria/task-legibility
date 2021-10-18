@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import signal
+import json
 
 import numpy as np
 import multiprocessing as mp
@@ -21,7 +22,7 @@ from pathlib import Path
 from multiprocessing import Process
 
 SCALABILITY_WORLDS = {1: '10x10_world_2', 2: '25x25_world',  3: '40x40_world', 4: '50x50_world',
-					  5: '60x60_world', 6: '75x75_world',  7: '80x80_world', 8: '90x90_world'}
+					  5: '60x60_world', 6: '75x75_world'}#,  7: '80x80_world', 8: '90x90_world'}
 
 OBJECTS_WORLDS = {1: '25x25_world_g3', 2: '25x25_world_g4', 3: '25x25_world_g5', 4: '25x25_world_g6',
 				  5: '25x25_world_g7', 6: '25x25_world_g8', 7: '25x25_world_g9', 8: '25x25_world_g10'}
@@ -75,29 +76,55 @@ def signal_handler(signum, frame):
 	raise TimeoutException(7200)
 
 
-def write_csv(csv_file: Path, metric: str, results: Dict, access_type: str) -> None:
+def store_savepoint(file_path: Path, results: Dict, iteration: int) -> None:
+
+	# Create JSON with save data
+	save_data = dict()
+	save_data['results'] = results
+	save_data['iteration'] = iteration
+
+	# Save data to file
+	with open(file_path, 'w') as json_file:
+		json.dump(save_data, json_file)
+		
+
+def load_savepoint(file_path: Path) -> Tuple[Dict, int]:
+	
+	json_file = open(file_path, 'r')
+	data = json.load(json_file)
+	
+	return data['results'], data['iteration']
+
+
+def write_iterations_results_csv(csv_file: Path, results: Dict, access_type: str, fields: List[str], iteration_data: Tuple, n_iteration: int) -> None:
 	try:
-		if metric == 'all':
-			results_keys = list(results.keys())
-			fields = ['world_size'] + list(results[results_keys[0]].keys())
-			with open(csv_file, access_type) as csvfile:
-				writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=',', lineterminator='\n')
-				if access_type != 'a':
-					writer.writeheader()
-				for key, val in sorted(results.items()):
-					row = {'world_size': key}
-					row.update(val)
-					writer.writerow(row)
-		else:
-			fields = ['world_size'] + [metric]
-			with open(csv_file, access_type) as csvfile:
-				writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=',', lineterminator='\n')
-				if access_type != 'a':
-					writer.writeheader()
-				for key, val in sorted(results.items()):
-					row = {'world_size': key}
-					row.update({metric: val})
-					writer.writerow(row)
+		with open(csv_file, access_type) as csvfile:
+			field_names = ['iteration_test'] + fields
+			writer = csv.DictWriter(csvfile, fieldnames=field_names, delimiter=',', lineterminator='\n')
+			if access_type != 'a':
+				writer.writeheader()
+			it_idx = str(n_iteration) + ' ' + ' '.join(iteration_data)
+			row = {'iteration_test': it_idx}
+			row.update(results.items())
+			# row = dict()
+			# for key, val in sorted(results.items()):
+			# 	row.update({key: val})
+			writer.writerow(row)
+	
+	except IOError as e:
+		print(colored("I/O error: " + str(e), color='red'))
+
+
+def write_full_results_csv(csv_file: Path, metric: str, results: Dict, access_type: str, fields: List[str]) -> None:
+	try:
+		with open(csv_file, access_type) as csvfile:
+			writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=',', lineterminator='\n')
+			if access_type != 'a':
+				writer.writeheader()
+			for key, val in sorted(results.items()):
+				row = {'world_size': key}
+				row.update(val)
+				writer.writerow(row)
 	
 	except IOError as e:
 		print(colored("I/O error: " + str(e), color='red'))
@@ -116,7 +143,8 @@ def get_goal_states(states: np.ndarray, goal: str) -> List[int]:
 
 def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, beta: float, evaluation: str, gamma: float, metric: str,
 					n_tasks: int, n_states: int, n_reps: int, eval_results: Dict, task_states: List[Tuple], tasks: List[str],
-					framework: str, verbose: bool, state_goal: Tuple, q_mdps: Dict, v_mdps: Dict, mdps: Dict, dists: np.ndarray) -> None:
+					framework: str, verbose: bool, state_goal: Tuple, q_mdps: Dict, v_mdps: Dict, mdps: Dict, dists: np.ndarray,
+					data_dir: Path, n_iteration: int, world: str) -> None:
 	
 	# Auxiliary methods to test the performance of each framework in obtaining a sequence of legible actions
 	def policy_trajectory(task_mdp_w: LegibleTaskMDP, tasks: List[str], goal: str, x0: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -154,6 +182,7 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 	sys.stderr.flush()
 	signal.signal(signal.SIGALRM, signal_handler)
 	signal.alarm(7200)  # Two hours to complete evaluation
+	results = {}
 	try:
 		if framework == 'policy':
 			if metric == 'all':
@@ -167,6 +196,11 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				policy_m_performance = miura_evaluation(policy_traj, tasks.index(goal), miura_mdp)
 				policy_p_performance = policy_evaluation(policy_traj, tasks.index(goal), policy_mdp)
 				policy_t_performance = timeit.timeit(policy_stmt, number=1)
+				
+				results['failures'] = 0
+				results['policy'] = policy_p_performance
+				results['miura'] = policy_m_performance
+				results['time'] = policy_t_performance
 				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
@@ -220,6 +254,9 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				else:
 					raise InvalidEvaluationMetricError(metric)
 				
+				results['failures'] = 0
+				results[metric] = policy_performance
+				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
 						eval_results[n_states] = dict()
@@ -251,6 +288,11 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				miura_m_performance = miura_evaluation(miura_traj, tasks.index(goal), miura_mdp)
 				miura_p_performance = policy_evaluation(miura_traj, tasks.index(goal), policy_mdp)
 				miura_t_performance = timeit.timeit(miura_stmt, number=1)
+				
+				results['failures'] = 0
+				results['policy'] = miura_p_performance
+				results['miura'] = miura_m_performance
+				results['time'] = miura_t_performance
 				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
@@ -304,6 +346,9 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				else:
 					raise InvalidEvaluationMetricError(metric)
 				
+				results['failures'] = 0
+				results[metric] = miura_performance
+				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
 						eval_results[n_states] = dict()
@@ -330,6 +375,12 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 	except TimeoutException:
 		
 		if metric == 'all':
+			
+			results['failures'] = 1
+			results['policy'] = 0
+			results['miura'] = 0
+			results['time'] = 0
+			
 			if evaluation == 'scale':
 				if n_states not in eval_results:
 					eval_results[n_states] = dict()
@@ -354,6 +405,10 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				raise InvalidEvaluationTypeError(evaluation)
 			
 		else:
+			
+			results['failures'] = 1
+			results[metric] = 0
+			
 			if evaluation == 'scale':
 				if n_states not in eval_results:
 					eval_results[n_states] = dict()
@@ -373,16 +428,38 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 			else:
 				raise InvalidEvaluationTypeError(evaluation)
 	
+	# Dump iteration results to file
+	print('Writing iteration results to file.')
+	csv_file = data_dir / 'results' / ('evaluation_results_' + framework + '_' + evaluation + '_' + metric + '_' + world + '.csv')
+	field_names = list(results.keys())
+
+	if n_iteration < 1:
+		write_iterations_results_csv(csv_file, results, 'w', field_names, state_goal, n_iteration)
+	else:
+		write_iterations_results_csv(csv_file, results, 'a', field_names, state_goal, n_iteration)
+	
 
 def world_evaluation(n_reps: int, beta: float, fail_prob: float, gamma: float, data_dir: Path, log_file: Path, evaluation: str, metric: str,
 					 world: str, framework: str, world_idx: int, verbose: bool, state_goals_test: List[Tuple]) -> None:
 
+	log_dir = log_file.parent.absolute()
+	tested_environments_file = log_dir / ('evaluation_finished_' + framework + '_' + evaluation + '_' + metric + '.txt')
+	tested_environments = []
+	if tested_environments_file.exists():
+		with open(tested_environments_file, 'r') as file:
+			tested_environments = file.read().splitlines()
+	else:
+		tested_environments_file.touch(exist_ok=True)
+	
+	# If current world environment has already been tested then don't repeat
+	if world in tested_environments:
+		return
+	
 	sys.stdout = open(log_file, 'w')
 	sys.stderr = open(log_file, 'a')
 	print('Starting evaluation for world: ' + world)
 	sys.stdout.flush()
 	sys.stderr.flush()
-	# pool = mp.Pool(processes=mp.cpu_count())
 	
 	# Load mazeworld information
 	with open(data_dir / 'configs' / (world + '.yaml')) as file:
@@ -419,33 +496,49 @@ def world_evaluation(n_reps: int, beta: float, fail_prob: float, gamma: float, d
 		mdps['mdp' + str(i + 1)] = mdp
 	dists = np.array(dists)
 	
-	eval_results = dict()
-	# manager = mp.Manager()
-	# eval_results = manager.dict()
-	iterator = tqdm(range(n_reps), desc='Evaluation Repetitions') if verbose else (range(n_reps))
+	# Verify if a savepoint exists to restart from
+	savepoint_file = data_dir / 'results' / ('evaluation_' + framework + '_' + evaluation + '_' + metric + '.save')
+	if savepoint_file.exists():
+		eval_results, eval_begin = load_savepoint(savepoint_file)
+	else:
+		eval_results = dict()
+		eval_begin = 0
+	
+	iterator = tqdm(range(eval_begin, n_reps), desc='Evaluation Repetitions') if verbose else (range(eval_begin, n_reps))
+	print('Starting evaluation iterations')
 	for iteration in iterator:
-		# pool.apply_async(world_iteration, args=(X_w, A_w, P_w, beta, evaluation, gamma, metric, nT, nX, n_reps,
-		# 										eval_results, swmw, task_states, tasks, framework, q_mdps, v_mdps, mdps, dists))
-		world_iteration(X_w, A_w, P_w, beta, evaluation, gamma, metric, nT, nX, n_reps, eval_results,
-						task_states, tasks, framework, verbose, state_goals_test[iteration], q_mdps, v_mdps, mdps, dists)
+		world_iteration(X_w, A_w, P_w, beta, evaluation, gamma, metric, nT, nX, n_reps, eval_results, task_states, tasks, framework, verbose,
+						state_goals_test[iteration], q_mdps, v_mdps, mdps, dists, data_dir, iteration, world)
+		if iteration % 10 == 0:
+			store_savepoint(savepoint_file, eval_results, iteration)
+			print('Updating evaluation savepoint.')
 		if (iteration == 0) or ((iteration + 1) < 100 and (iteration + 1) % 10 == 0) or ((iteration + 1) > 100 and (iteration + 1) % 100 == 0):
 			print('Reached iteration %d!! Completed %.2f%% of the repetitions\n' % ((iteration + 1), (iteration + 1) / n_reps * 100))
 		sys.stdout.flush()
 		sys.stderr.flush()
 	
+	# Dump world evaluation results to file
 	print('Finished evaluation for world: %s\n' % world)
 	csv_file = data_dir / 'results' / ('evaluation_results_' + framework + '_' + evaluation + '_' + metric + '.csv')
-	if world_idx < 1:
-		write_csv(csv_file, metric, eval_results, 'w')
+	results_keys = list(eval_results.keys())
+	field_names = ['world_size'] + list(eval_results[results_keys[0]].keys())
+		
+	if world_idx == 1:
+		write_full_results_csv(csv_file, metric, eval_results, 'w', field_names)
 	else:
-		write_csv(csv_file, metric, eval_results, 'a')
+		write_full_results_csv(csv_file, metric, eval_results, 'a', field_names)
 	
-	# pool.close()
-	# pool.join()
-
+	# Update list of tested envrionments
+	try:
+		with open(tested_environments_file, 'a') as file:
+			file.write(world + '\n')
+			
+	except IOError as e:
+		print(colored("I/O error: " + str(e), color='red'))
+	
 
 def frameworks_evaluation(data_dir: Path, log_dir: Path, evaluation: str, n_reps: int, fail_prob: float, beta: float,
-						  gamma: float, metric: str, framework: str, verbose: bool) -> None:
+						  gamma: float, metric: str, framework: str, verbose: bool, test_keys: List[int]) -> None:
 	
 	if evaluation == 'scale':
 		worlds = SCALABILITY_WORLDS
@@ -460,17 +553,15 @@ def frameworks_evaluation(data_dir: Path, log_dir: Path, evaluation: str, n_reps
 	else:
 		raise InvalidEvaluationTypeError(evaluation)
 	
-	world_idx = 0
 	procs = []
 	for idx in worlds_keys:
-		log_file = log_dir / ('evaluation_log_' + framework + '_' + evaluation + '_' + metric + '_' + worlds[idx] + '.txt')
-		p = Process(target=world_evaluation,
-					args=(n_reps, beta, fail_prob, gamma, data_dir, log_file, evaluation, metric, worlds[idx],
-						  framework, world_idx, verbose, state_goals[worlds[idx]]))
-		world_idx += 1
-		p.start()
-		procs.append(p)
-		# world_evaluation(n_reps, beta, fail_prob, gamma, data_dir, log_file, evaluation, metric, worlds[idx], framework, world_idx)
+		if idx in test_keys:
+			log_file = log_dir / ('evaluation_log_' + framework + '_' + evaluation + '_' + metric + '_' + worlds[idx] + '.txt')
+			p = Process(target=world_evaluation,
+						args=(n_reps, beta, fail_prob, gamma, data_dir, log_file, evaluation, metric, worlds[idx],
+							  framework, idx, verbose, state_goals[worlds[idx]]))
+			p.start()
+			procs.append(p)
 	
 	for p in procs:
 		p.join()
@@ -494,6 +585,8 @@ def main():
 						help='Constant that guides how close to the optimal policy the legbility is.')
 	parser.add_argument('--gamma', dest='gamma', type=float, required=True,
 						help='Discount factor for the MDPs')
+	parser.add_argument('--world-keys', dest='world_keys', type=int, nargs='+',
+						help='List of world keys to test')
 	parser.add_argument('--verbose', dest='verbose', action='store_true',
 						help='Discount factor for the MDPs')
 	parser.add_argument('--no-verbose', dest='verbose', action='store_false',
@@ -511,9 +604,10 @@ def main():
 	beta = args.beta
 	gamma = args.gamma
 	verbose = args.verbose
+	world_keys = args.world_keys
 	
 	# Setup script output files and locations
-	script_parent_dir = Path(__file__).parent.parent.absolute()
+	script_parent_dir = Path(__file__).parent.absolute().parent.absolute()
 	data_dir = script_parent_dir / 'data'
 	if not os.path.exists(script_parent_dir / 'logs'):
 		os.mkdir(script_parent_dir / 'logs')
@@ -522,9 +616,17 @@ def main():
 	sys.stdout = open(log_file, 'w+')
 	sys.stderr = open(log_file, 'a')
 
+	if world_keys is None:
+		if evaluation == 'scale':
+			world_keys = list(SCALABILITY_WORLDS.keys())
+		elif evaluation == 'goals':
+			world_keys = list(OBJECTS_WORLDS.keys())
+		else:
+			raise InvalidEvaluationTypeError(evaluation)
+
 	try:
 		print('Start time: ' + str(time.ctime()))
-		frameworks_evaluation(data_dir, log_dir, evaluation, n_reps, fail_prob, beta, gamma, metric, framework, verbose)
+		frameworks_evaluation(data_dir, log_dir, evaluation, n_reps, fail_prob, beta, gamma, metric, framework, verbose, world_keys)
 		print('End time: ' + str(time.ctime()))
 
 	except InvalidEvaluationTypeError:
