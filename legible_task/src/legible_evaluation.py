@@ -16,84 +16,17 @@ np.set_printoptions(precision=5)
 from tqdm import tqdm
 from mdp import LegibleTaskMDP, MiuraLegibleMDP, MDP, Utilities
 from mazeworld import SimpleWallMazeWorld2
+from utilities import InvalidEvaluationTypeError, InvalidEvaluationMetricError, InvalidFrameworkError, TimeoutException, store_savepoint, load_savepoint, signal_handler
 from typing import Dict, List, Tuple
 from termcolor import colored
 from pathlib import Path
 from multiprocessing import Process
 
 SCALABILITY_WORLDS = {1: '10x10_world_2', 2: '25x25_world',  3: '40x40_world', 4: '50x50_world',
-					  5: '60x60_world', 6: '75x75_world'}#,  7: '80x80_world', 8: '90x90_world'}
+					  5: '60x60_world', 6: '75x75_world', 7: '5x8_world'}#,  7: '80x80_world', 8: '90x90_world'}
 
 OBJECTS_WORLDS = {1: '25x25_world_g3', 2: '25x25_world_g4', 3: '25x25_world_g5', 4: '25x25_world_g6',
 				  5: '25x25_world_g7', 6: '25x25_world_g8', 7: '25x25_world_g9', 8: '25x25_world_g10'}
-
-
-class InvalidEvaluationTypeError(Exception):
-
-	def __init__(self, eval_type, message="Evaluation type is not in list [scale, goals]"):
-		self.eval_type = eval_type
-		self.message = message
-		super().__init__(self.message)
-
-	def __str__(self):
-		return f'{self.eval_type} -> {self.message}'
-
-
-class InvalidEvaluationMetricError(Exception):
-
-	def __init__(self, metric, message="Chosen evaluation metric is not among the possibilities: miura, policy or time"):
-		self.metric = metric
-		self.message = message
-		super().__init__(self.message)
-
-	def __str__(self):
-		return f'{self.metric} -> {self.message}'
-	
-
-class InvalidFrameworkError(Exception):
-
-	def __init__(self, metric, message="Chosen framework choice is not available. Available options are: policy or miura"):
-		self.metric = metric
-		self.message = message
-		super().__init__(self.message)
-
-	def __str__(self):
-		return f'{self.metric} -> {self.message}'
-
-
-class TimeoutException(Exception):
-
-	def __init__(self, max_time, message="Could not finish evaluation in under 2 hours."):
-		self.max_time = max_time
-		self.message = message
-		super().__init__(self.message)
-
-	def __str__(self):
-		return f'{self.max_time} -> {self.message}'
-
-
-def signal_handler(signum, frame):
-	raise TimeoutException(7200)
-
-
-def store_savepoint(file_path: Path, results: Dict, iteration: int) -> None:
-
-	# Create JSON with save data
-	save_data = dict()
-	save_data['results'] = results
-	save_data['iteration'] = iteration
-
-	# Save data to file
-	with open(file_path, 'w') as json_file:
-		json.dump(save_data, json_file)
-		
-
-def load_savepoint(file_path: Path) -> Tuple[Dict, int]:
-	
-	json_file = open(file_path, 'r')
-	data = json.load(json_file)
-	
-	return data['results'], data['iteration']
 
 
 def write_iterations_results_csv(csv_file: Path, results: Dict, access_type: str, fields: List[str], iteration_data: Tuple, n_iteration: int) -> None:
@@ -106,9 +39,6 @@ def write_iterations_results_csv(csv_file: Path, results: Dict, access_type: str
 			it_idx = str(n_iteration) + ' ' + ' '.join(iteration_data)
 			row = {'iteration_test': it_idx}
 			row.update(results.items())
-			# row = dict()
-			# for key, val in sorted(results.items()):
-			# 	row.update({key: val})
 			writer.writerow(row)
 	
 	except IOError as e:
@@ -117,6 +47,7 @@ def write_iterations_results_csv(csv_file: Path, results: Dict, access_type: str
 
 def write_full_results_csv(csv_file: Path, metric: str, results: Dict, access_type: str, fields: List[str]) -> None:
 	try:
+		print('Results to write: ' + str(list(results.items())))
 		with open(csv_file, access_type) as csvfile:
 			writer = csv.DictWriter(csvfile, fieldnames=fields, delimiter=',', lineterminator='\n')
 			if access_type != 'a':
@@ -204,27 +135,27 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
-						eval_results[n_states] = dict()
-						eval_results[n_states]['failures'] = 0
-						eval_results[n_states]['policy'] = policy_p_performance / n_reps
-						eval_results[n_states]['miura'] = policy_m_performance / n_reps
-						eval_results[n_states]['time'] = policy_t_performance / n_reps
+						eval_results[str(n_states)] = dict()
+						eval_results[str(n_states)]['failures'] = 0
+						eval_results[str(n_states)]['policy'] = policy_p_performance / n_reps
+						eval_results[str(n_states)]['miura'] = policy_m_performance / n_reps
+						eval_results[str(n_states)]['time'] = policy_t_performance / n_reps
 					else:
-						eval_results[n_states]['policy'] += policy_p_performance / n_reps
-						eval_results[n_states]['miura'] += policy_m_performance / n_reps
-						eval_results[n_states]['time'] += policy_t_performance / n_reps
+						eval_results[str(n_states)]['policy'] += policy_p_performance / n_reps
+						eval_results[str(n_states)]['miura'] += policy_m_performance / n_reps
+						eval_results[str(n_states)]['time'] += policy_t_performance / n_reps
 				
 				elif evaluation == 'goals':
 					if n_tasks not in eval_results:
-						eval_results[n_tasks] = dict()
-						eval_results[n_tasks]['failures'] = 0
-						eval_results[n_tasks]['policy'] = policy_p_performance / n_reps
-						eval_results[n_tasks]['miura'] = policy_m_performance / n_reps
-						eval_results[n_tasks]['time'] = policy_t_performance / n_reps
+						eval_results[str(n_tasks)] = dict()
+						eval_results[str(n_tasks)]['failures'] = 0
+						eval_results[str(n_tasks)]['policy'] = policy_p_performance / n_reps
+						eval_results[str(n_tasks)]['miura'] = policy_m_performance / n_reps
+						eval_results[str(n_tasks)]['time'] = policy_t_performance / n_reps
 					else:
-						eval_results[n_tasks]['policy'] += policy_p_performance / n_reps
-						eval_results[n_tasks]['miura'] += policy_m_performance / n_reps
-						eval_results[n_tasks]['time'] += policy_t_performance / n_reps
+						eval_results[str(n_tasks)]['policy'] += policy_p_performance / n_reps
+						eval_results[str(n_tasks)]['miura'] += policy_m_performance / n_reps
+						eval_results[str(n_tasks)]['time'] += policy_t_performance / n_reps
 				
 				else:
 					raise InvalidEvaluationTypeError(evaluation)
@@ -259,19 +190,19 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
-						eval_results[n_states] = dict()
-						eval_results[n_states]['failures'] = 0
-						eval_results[n_states][metric] = policy_performance / n_reps
+						eval_results[str(n_states)] = dict()
+						eval_results[str(n_states)]['failures'] = 0
+						eval_results[str(n_states)][metric] = policy_performance / n_reps
 					else:
-						eval_results[n_states][metric] += policy_performance / n_reps
+						eval_results[str(n_states)][metric] += policy_performance / n_reps
 				
 				elif evaluation == 'goals':
 					if n_tasks not in eval_results:
-						eval_results[n_tasks] = dict()
-						eval_results[n_tasks]['failures'] = 0
-						eval_results[n_tasks][metric] = policy_performance / n_reps
+						eval_results[str(n_tasks)] = dict()
+						eval_results[str(n_tasks)]['failures'] = 0
+						eval_results[str(n_tasks)][metric] = policy_performance / n_reps
 					else:
-						eval_results[n_tasks][metric] += policy_performance / n_reps
+						eval_results[str(n_tasks)][metric] += policy_performance / n_reps
 				
 				else:
 					raise InvalidEvaluationTypeError(evaluation)
@@ -296,27 +227,27 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
-						eval_results[n_states] = dict()
-						eval_results[n_states]['failures'] = 0
-						eval_results[n_states]['policy'] = miura_p_performance / n_reps
-						eval_results[n_states]['miura'] = miura_m_performance / n_reps
-						eval_results[n_states]['time'] = miura_t_performance / n_reps
+						eval_results[str(n_states)] = dict()
+						eval_results[str(n_states)]['failures'] = 0
+						eval_results[str(n_states)]['policy'] = miura_p_performance / n_reps
+						eval_results[str(n_states)]['miura'] = miura_m_performance / n_reps
+						eval_results[str(n_states)]['time'] = miura_t_performance / n_reps
 					else:
-						eval_results[n_states]['policy'] += miura_p_performance / n_reps
-						eval_results[n_states]['miura'] += miura_m_performance / n_reps
-						eval_results[n_states]['time'] += miura_t_performance / n_reps
+						eval_results[str(n_states)]['policy'] += miura_p_performance / n_reps
+						eval_results[str(n_states)]['miura'] += miura_m_performance / n_reps
+						eval_results[str(n_states)]['time'] += miura_t_performance / n_reps
 					
 				elif evaluation == 'goals':
 					if n_tasks not in eval_results:
-						eval_results[n_tasks] = dict()
-						eval_results[n_tasks]['failures'] = 0
-						eval_results[n_tasks]['policy'] = miura_p_performance / n_reps
-						eval_results[n_tasks]['miura'] = miura_m_performance / n_reps
-						eval_results[n_tasks]['time'] = miura_t_performance / n_reps
+						eval_results[str(n_tasks)] = dict()
+						eval_results[str(n_tasks)]['failures'] = 0
+						eval_results[str(n_tasks)]['policy'] = miura_p_performance / n_reps
+						eval_results[str(n_tasks)]['miura'] = miura_m_performance / n_reps
+						eval_results[str(n_tasks)]['time'] = miura_t_performance / n_reps
 					else:
-						eval_results[n_tasks]['policy'] += miura_p_performance / n_reps
-						eval_results[n_tasks]['miura'] += miura_m_performance / n_reps
-						eval_results[n_tasks]['time'] += miura_t_performance / n_reps
+						eval_results[str(n_tasks)]['policy'] += miura_p_performance / n_reps
+						eval_results[str(n_tasks)]['miura'] += miura_m_performance / n_reps
+						eval_results[str(n_tasks)]['time'] += miura_t_performance / n_reps
 				
 				else:
 					raise InvalidEvaluationTypeError(evaluation)
@@ -351,19 +282,19 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 				
 				if evaluation == 'scale':
 					if n_states not in eval_results:
-						eval_results[n_states] = dict()
-						eval_results[n_states]['failures'] = 0
-						eval_results[n_states][metric] = miura_performance / n_reps
+						eval_results[str(n_states)] = dict()
+						eval_results[str(n_states)]['failures'] = 0
+						eval_results[str(n_states)][metric] = miura_performance / n_reps
 					else:
-						eval_results[n_states][metric] += miura_performance / n_reps
+						eval_results[str(n_states)][metric] += miura_performance / n_reps
 				
 				elif evaluation == 'goals':
 					if n_tasks not in eval_results:
-						eval_results[n_tasks] = dict()
-						eval_results[n_tasks]['failures'] = 0
-						eval_results[n_tasks][metric] = miura_performance / n_reps
+						eval_results[str(n_tasks)] = dict()
+						eval_results[str(n_tasks)]['failures'] = 0
+						eval_results[str(n_tasks)][metric] = miura_performance / n_reps
 					else:
-						eval_results[n_tasks][metric] += miura_performance / n_reps
+						eval_results[str(n_tasks)][metric] += miura_performance / n_reps
 				
 				else:
 					raise InvalidEvaluationTypeError(evaluation)
@@ -379,27 +310,29 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 			results['failures'] = 1
 			results['policy'] = 0
 			results['miura'] = 0
-			results['time'] = 0
+			results['time'] = 7200
 			
 			if evaluation == 'scale':
 				if n_states not in eval_results:
-					eval_results[n_states] = dict()
-					eval_results[n_states]['failures'] = 1
-					eval_results[n_states]['policy'] = 0
-					eval_results[n_states]['miura'] = 0
-					eval_results[n_states]['time'] = 0
+					eval_results[str(n_states)] = dict()
+					eval_results[str(n_states)]['failures'] = 1
+					eval_results[str(n_states)]['policy'] = 0
+					eval_results[str(n_states)]['miura'] = 0
+					eval_results[str(n_states)]['time'] = 7200 / n_reps
 				else:
-					eval_results[n_states]['failures'] += 1
+					eval_results[str(n_states)]['failures'] += 1
+					eval_results[str(n_states)]['time'] += 7200 / n_reps
 			
 			elif evaluation == 'goals':
 				if n_tasks not in eval_results:
-					eval_results[n_tasks] = dict()
-					eval_results[n_tasks]['failures'] = 1
-					eval_results[n_tasks]['policy'] = 0
-					eval_results[n_tasks]['miura'] = 0
-					eval_results[n_tasks]['time'] = 0
+					eval_results[str(n_tasks)] = dict()
+					eval_results[str(n_tasks)]['failures'] = 1
+					eval_results[str(n_tasks)]['policy'] = 0
+					eval_results[str(n_tasks)]['miura'] = 0
+					eval_results[str(n_tasks)]['time'] = 7200 / n_reps
 				else:
-					eval_results[n_tasks]['failures'] += 1
+					eval_results[str(n_tasks)]['failures'] += 1
+					eval_results[str(n_tasks)]['time'] += 7200 / n_reps
 			
 			else:
 				raise InvalidEvaluationTypeError(evaluation)
@@ -407,23 +340,25 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 		else:
 			
 			results['failures'] = 1
-			results[metric] = 0
+			results[metric] = 7200 if metric == 'time' else 0
 			
 			if evaluation == 'scale':
 				if n_states not in eval_results:
-					eval_results[n_states] = dict()
-					eval_results[n_states][metric] = 0
-					eval_results[n_states]['failures'] = 1
+					eval_results[str(n_states)] = dict()
+					eval_results[str(n_states)][metric] = (7200 if metric == 'time' else 0) / n_reps
+					eval_results[str(n_states)]['failures'] = 1
 				else:
-					eval_results[n_states]['failures'] += 1
+					eval_results[str(n_states)][metric] += (7200 if metric == 'time' else 0) / n_reps
+					eval_results[str(n_states)]['failures'] += 1
 			
 			elif evaluation == 'goals':
 				if n_tasks not in eval_results:
-					eval_results[n_tasks] = dict()
-					eval_results[n_tasks][metric] = 0
-					eval_results[n_tasks]['failures'] = 1
+					eval_results[str(n_tasks)] = dict()
+					eval_results[str(n_tasks)][metric] = (7200 if metric == 'time' else 0) / n_reps
+					eval_results[str(n_tasks)]['failures'] = 1
 				else:
-					eval_results[n_tasks]['failures'] += 1
+					eval_results[str(n_tasks)][metric] += (7200 if metric == 'time' else 0) / n_reps
+					eval_results[str(n_tasks)]['failures'] += 1
 			
 			else:
 				raise InvalidEvaluationTypeError(evaluation)
@@ -497,10 +432,12 @@ def world_evaluation(n_reps: int, beta: float, fail_prob: float, gamma: float, d
 	dists = np.array(dists)
 	
 	# Verify if a savepoint exists to restart from
-	savepoint_file = data_dir / 'results' / ('evaluation_' + framework + '_' + evaluation + '_' + metric + '.save')
+	savepoint_file = data_dir / 'results' / ('evaluation_' + framework + '_' + evaluation + '_' + metric + '_' + world + '.save')
 	if savepoint_file.exists():
+		print('Restarting evaluation. Loading savepoint.')
 		eval_results, eval_begin = load_savepoint(savepoint_file)
 	else:
+		print('Starting evaluation from beginning.')
 		eval_results = dict()
 		eval_begin = 0
 	
@@ -540,6 +477,7 @@ def world_evaluation(n_reps: int, beta: float, fail_prob: float, gamma: float, d
 def frameworks_evaluation(data_dir: Path, log_dir: Path, evaluation: str, n_reps: int, fail_prob: float, beta: float,
 						  gamma: float, metric: str, framework: str, verbose: bool, test_keys: List[int]) -> None:
 	
+	# Get the correct environments to test and respective (initial state, goal) testing pairs
 	if evaluation == 'scale':
 		worlds = SCALABILITY_WORLDS
 		worlds_keys = SCALABILITY_WORLDS.keys()
@@ -553,6 +491,7 @@ def frameworks_evaluation(data_dir: Path, log_dir: Path, evaluation: str, n_reps
 	else:
 		raise InvalidEvaluationTypeError(evaluation)
 	
+	# To increase efficiency parallelize evaluation, by running each world environment in a different subprocess
 	procs = []
 	for idx in worlds_keys:
 		if idx in test_keys:
@@ -616,6 +555,7 @@ def main():
 	sys.stdout = open(log_file, 'w+')
 	sys.stderr = open(log_file, 'a')
 
+	# By default test all world environments
 	if world_keys is None:
 		if evaluation == 'scale':
 			world_keys = list(SCALABILITY_WORLDS.keys())

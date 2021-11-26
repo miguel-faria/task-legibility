@@ -1,30 +1,249 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+import sys
+import os
+import time
+import signal
+import json
 
 import numpy as np
-import time
 import argparse
 import yaml
-np.set_printoptions(precision=5)
+import csv
+np.set_printoptions(precision=5, linewidth=1000)
 
 from termcolor import colored
 from tqdm import tqdm
 from mdp import LegibleTaskMDP, MDP, LearnerMDP, Utilities
-from mazeworld import AutoCollectMazeWord, WallAutoCollectMazeWorld
-from typing import List, Dict, Tuple
+from mazeworld import AutoCollectMazeWord, WallAutoCollectMazeWorld, SimpleWallMazeWorld2
+from utilities import store_savepoint, load_savepoint
+from typing import Dict, List, Tuple
+from pathlib import Path
+from multiprocessing import Process
 
+
+def write_iteration_results_csv(csv_file: Path, results: Dict, access_type: str, fields: List[str], iteration_states: List[str], n_iteration: int) -> None:
+    try:
+        with open(csv_file, access_type) as csvfile:
+            field_names = ['iteration'] + fields
+            it_idx = str(n_iteration) + ' ' + ' '.join(iteration_states)
+            row = [it_idx]
+            for key, val in sorted(results.items()):
+                inner_keys = list(results[key].keys())
+                for inner_key in inner_keys:
+                    print(results[key][inner_key])
+                    row += [results[key][inner_key]]
+            print(row)
+            if access_type != 'a':
+                headers = ', '.join(field_names)
+                np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', header=headers, fmt='%s', comments='')
+            else:
+                np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', fmt='%s', comments='')
+    
+    except IOError as e:
+        print(colored("I/O error: " + str(e), color='red'))
+
+
+def write_full_results_csv(csv_file: Path, results: Dict, access_type: str, fields: List[str], action_type: str) -> None:
+    try:
+        print('Results to write: ' + str(list(results.items())))
+        with open(csv_file, access_type) as csvfile:
+            i = 0
+            field_names = ['action_type'] + fields
+            for key, val in sorted(results.items()):
+                row = [action_type]
+                inner_keys = list(results[key].keys())
+                for inner_key in inner_keys:
+                    row += [results[key][inner_key]]
+                
+                if access_type != 'a' and i < 1:
+                    headers = ', '.join(field_names)
+                    np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', header=headers, fmt='%s', comments='')
+                else:
+                    np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', fmt='%s', comments='')
+                
+                i += 1
+    
+    except IOError as e:
+        print(colored("I/O error: " + str(e), color='red'))
+
+
+def wrapper(func, *args, **kwargs):
+    def wrapped():
+        return func(*args, **kwargs)
+    
+    return wrapped
+
+
+def get_goal_states(states: np.ndarray, goal: str) -> List[int]:
+    state_lst = list(states)
+    return [state_lst.index(state) for state in states if state.find(goal) != -1]
+
+
+def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learner: LearnerMDP, mdps: Dict[str, MDP], pols: Dict[str, np.ndarray],
+                    n_reps, state_goals: List[str], tasks: List[str], data_dir: Path, action_type: str, agent: str,
+                    mode: str, header: bool, log_file: Path) -> None:
+    
+    sys.stdout = open(log_file, 'w')
+    sys.stderr = open(log_file, 'a')
+    n_trajs = 1
+    # Verify if a savepoint exists to restart from
+    savepoint_file = data_dir / 'results' / ('irl_evaluation_' + agent + '_' + mode + '_' + action_type + '.save')
+    if savepoint_file.exists():
+        print('Restarting evaluation. Loading savepoint.')
+        eval_results, eval_begin = load_savepoint(savepoint_file)
+    else:
+        print('Starting evaluation from beginning.')
+        eval_results = dict()
+        eval_results['correct'] = dict()
+        eval_results['confidence'] = dict()
+        eval_begin = 0
+   
+    for rep in range(eval_begin, n_reps):
+        
+        x0 = state_goals[rep]
+        iteraction_res = dict()
+        iteraction_res['correct'] = dict()
+        iteraction_res['confidence'] = dict()
+        iteraction_res['trajectory'] = dict()
+        
+        for goal in tasks:
+            print('------------------------------------------------------------------------')
+            print('Evaluation for task: %s' % goal)
+            mdp = mdps['mdp_' + str(tasks.index(goal) + 1)]
+            pol = pols['mdp_' + str(tasks.index(goal) + 1)]
+            
+            print('Creating trajectories')
+            traj = []
+            task_traj, task_act = mdp.trajectory_len(x0, pol, traj_len)
+            for i in range(len(task_traj)):
+                traj += [[list(states).index(task_traj[i]), list(actions).index(task_act[i])]]
+    
+            print('Testing inference of cost')
+            if goal not in eval_results['correct']:
+                eval_results['correct'][goal] = np.zeros(traj_len)
+            if goal not in eval_results['confidence']:
+                eval_results['confidence'][goal] = np.zeros(traj_len)
+            learner_count, learner_confidence = learner.learner_eval(1, [traj], traj_len, 1, tasks.index(goal))
+            eval_results['correct'][goal] += learner_count / (n_trajs * n_reps)
+            eval_results['confidence'][goal] += learner_confidence / n_reps
+            iteraction_res['correct'][goal] = learner_count
+            iteraction_res['confidence'][goal] = learner_confidence
+            iteraction_res['trajectory'][goal] = task_traj.T
+
+        print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), rep, n_reps))
+        print('Storing iteration data to file.')
+        it_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '_' + action_type + '.csv')
+        results_keys = list(iteraction_res.keys())
+        field_names = []
+        for key in results_keys:
+            inner_keys = list(iteraction_res[key].keys())
+            for inner_key in inner_keys:
+                field_names += [str(key) + '_' + str(inner_key)]
+        
+        if rep < 1:
+            write_iteration_results_csv(it_file, iteraction_res, 'w', field_names, [x0], rep)
+        else:
+            write_iteration_results_csv(it_file, iteraction_res, 'a', field_names, [x0], rep)
+
+    # Write evaluation results to file
+    print('Finished evaluation for %s actions.\n' % action_type)
+    csv_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '.csv')
+    results_keys = list(eval_results.keys())
+    field_names = ['action_type']
+    for key in results_keys:
+        inner_keys = list(eval_results[key].keys())
+        for inner_key in inner_keys:
+            field_names += [str(key) + '_' + str(inner_key)]
+        
+    if header:
+        write_full_results_csv(csv_file, eval_results, 'w', field_names, action_type)
+    else:
+        write_full_results_csv(csv_file, eval_results, 'a', field_names, action_type)
+
+
+def eval_samples(states: List[str], actions: List[str], batch_size: int, learner: LearnerMDP, pols: Dict[str, np.ndarray], n_reps, state_goals: List[List[str]], tasks: List[str],
+                 data_dir: Path, action_type: str, agent: str, mode: str, header: bool, log_file: Path) -> None:
+    
+    sys.stdout = open(log_file, 'w')
+    sys.stderr = open(log_file, 'a')
+    n_batches = 1
+    # Verify if a savepoint exists to restart from
+    savepoint_file = data_dir / 'results' / ('irl_evaluation_' + agent + '_' + mode + '_' + action_type + '.save')
+    if savepoint_file.exists():
+        print('Restarting evaluation. Loading savepoint.')
+        eval_results, eval_begin = load_savepoint(savepoint_file)
+    else:
+        print('Starting evaluation from beginning.')
+        eval_results = dict()
+        eval_results['correct'] = dict()
+        eval_results['confidence'] = dict()
+        eval_begin = 0
+    
+    for rep in range(eval_begin, n_reps):
+
+        sample_states = state_goals[rep]
+        iteraction_res = dict()
+        iteraction_res['correct'] = dict()
+        iteraction_res['confidence'] = dict()
+        iteraction_res['trajectory'] = dict()
+        
+        for goal in tasks:
+            pol = pols['mdp_' + str(tasks.index(goal) + 1)]
+            
+            samples_tmp = []
+            samples_seq = []
+            for state in sample_states:
+                state_idx = states.index(state)
+                action = np.random.choice(len(actions), p=pol[state_idx, :])
+                samples_seq += [state]
+                samples_tmp += [[state_idx, action]]
+            samples = [np.array(samples_tmp)]
+                
+            print('Testing inference of cost')
+            if goal not in eval_results['correct']:
+                eval_results['correct'][goal] = np.zeros(batch_size)
+            if goal not in eval_results['confidence']:
+                eval_results['confidence'][goal] = np.zeros(batch_size)
+            learner_count, learner_confidence = learner.learner_eval(1, samples, batch_size, 1, tasks.index(goal))
+            eval_results['correct'][goal] += learner_count / (n_batches * n_reps)
+            eval_results['confidence'][goal] += learner_confidence / n_reps
+            iteraction_res['correct'][goal] = learner_count
+            iteraction_res['confidence'][goal] = learner_confidence
+            iteraction_res['trajectory'][goal] = np.array(samples_seq).T
+            
+        print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), rep, n_reps))
+        print('Storing iteration data to file.')
+        it_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '_' + action_type + '.csv')
+        results_keys = list(iteraction_res.keys())
+        field_names = []
+        for key in results_keys:
+            inner_keys = list(iteraction_res[key].keys())
+            for inner_key in inner_keys:
+                field_names += [str(key) + '_' + str(inner_key)]
+
+        if rep < 1:
+            write_iteration_results_csv(it_file, iteraction_res, 'w', field_names, sample_states, rep)
+        else:
+            write_iteration_results_csv(it_file, iteraction_res, 'a', field_names, sample_states, rep)
+
+    # Write evaluation results to file
+    print('Finished evaluation for %s actions.\n' % action_type)
+    csv_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '.csv')
+    results_keys = list(eval_results.keys())
+    field_names = ['action_type']
+    for key in results_keys:
+        inner_keys = list(eval_results[key].keys())
+        for inner_key in inner_keys:
+            field_names += [str(key) + '_' + str(inner_key)]
+    if header:
+        write_full_results_csv(csv_file, eval_results, 'w', field_names, action_type)
+    else:
+        write_full_results_csv(csv_file, eval_results, 'a', field_names, action_type)
+           
 
 def main():
-    def get_goal_states(states, goal, with_objs=True, goals=None):
-        if with_objs:
-            state_lst = list(states)
-            return [state_lst.index(x) for x in states if x.find(goal) != -1]
-        else:
-            state_lst = list(states)
-            for g in goals:
-                if g[2].find(goal) != -1:
-                    return [state_lst.index(str(g[0]) + ' ' + str(g[1]))]
 
-    WORLD_CONFIGS = {1: '8x8_world.yaml', 2: '10x10_world.yaml', 3: '8x8_world_2.yaml', 4: '10x10_world_2.yaml'}
+    WORLD_CONFIGS = {1: '8x8_world.yaml', 2: '10x10_world.yaml', 3: '8x8_world_2.yaml', 4: '10x10_world_2.yaml', 5: '10x10_world_3.yaml'}
 
     parser = argparse.ArgumentParser(description='IRL task legibility in stochastic environment argument parser')
     parser.add_argument('--agent', dest='agent', type=str, required=True, choices=['optimal', 'legible'],
@@ -36,20 +255,23 @@ def main():
                              'that computes the optimal legible action leveraged by the proximity to objectives.')
     parser.add_argument('--fail_prob', dest='fail_chance', type=float, required=True,
                         help='Probability of movement failing and staying in same place.')
-    parser.add_argument('--mode', dest='mode', type=str, required=True, choices=['single', 'random'],
-                        help='Task legibility performance mode: \'single\' to test performance for one specific'
-                             ' initial position (requires specifying initial position with field --begin);'
-                             '\'random\' gives the learner random (state, action) pairs in the gridworld instead'
-                             ' of trajectories between a starting position and a goal.')
+    parser.add_argument('--mode', dest='mode', type=str, required=True, choices=['trajectory', 'sample'],
+                        help='Task legibility performance mode: \'trajectory\' to test performance for trajectories'
+                             'starting in one specific initial position (initial positions must be in the \'trajectory\' '
+                             'field in the \'irl_test.yaml\' config file);'
+                             '\'sample\' gives the learner random (state, action) pairs in the gridworld instead '
+                             'of trajectories between a starting position and a goal (initial positions must be in the \'sample\' '
+                             'field in the \'irl_test.yaml\' config file).')
     parser.add_argument('--reps', dest='reps', type=int, required=True,
                         help='Number of repetitions for the evaluation cycle to clear rounding errors.')
-    parser.add_argument('--n_trajs', dest='n_trajs', type=int, help='For single mode, number of trajectories to generate for each objective')
-    parser.add_argument('--traj_len', dest='traj_len', type=int, help='For single mode, length of steps in each trajectory.')
-    parser.add_argument('--begin', dest='x0', type=str,
-                        help='For single mode, initial state in the format \'x y\', where x, y are the state coords')
-    parser.add_argument('--n_samples', dest='n_samples', type=int, help='For the random mode, number of (state, action) samples')
-    parser.add_argument('--batch_size', dest='batch_size', type=int, help='For the random mode, number of samples to test at once')
+    parser.add_argument('--verbose', dest='verbose', action='store_true',
+                        help='Discount factor for the MDPs')
+    parser.add_argument('--no_verbose', dest='verbose', action='store_false',
+                        help='Discount factor for the MDPs')
+    parser.add_argument('--traj_len', dest='traj_len', type=int, help='For single mode, length of states in the trajectory for each evaluation iteration.')
+    parser.add_argument('--batch_size', dest='batch_size', type=int, help='For the random mode, number of state samples for each evaluation iteration.')
 
+    # Parsing input arguments
     args = parser.parse_args()
     agent = args.agent
     world = args.world
@@ -57,8 +279,20 @@ def main():
     leg_func = args.leg_func
     n_reps = args.reps
     fail_chance = args.fail_chance
+    verbose = args.verbose
 
-    with open('../data/configs/' + WORLD_CONFIGS[world]) as file:
+    # Setup script output files and locations
+    script_parent_dir = Path(__file__).parent.absolute().parent.absolute()
+    data_dir = script_parent_dir / 'data'
+    if not os.path.exists(script_parent_dir / 'logs'):
+        os.mkdir(script_parent_dir / 'logs')
+    log_dir = script_parent_dir / 'logs'
+    log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '.txt')
+    sys.stdout = open(log_file, 'w+')
+    sys.stderr = open(log_file, 'a')
+
+    # Load world configuration
+    with open(data_dir / 'configs' / WORLD_CONFIGS[world]) as file:
         config_params = yaml.full_load(file)
 
         n_cols = config_params['n_cols']
@@ -66,51 +300,54 @@ def main():
         walls = config_params['walls']
         task_states = config_params['task_states']
         tasks = config_params['tasks']
-
-    opt_correct_count = {}
-    opt_average_confidence = {}
-    leg_correct_count = {}
-    leg_average_confidence = {}
-
+    
     print('######################################')
     print('#####   Auto Collect Maze World  #####')
     print('######################################')
     print('### Generating World ###')
+    sys.stdout.flush()
+    sys.stderr.flush()
     wacmw = WallAutoCollectMazeWorld()
     X_w, A_w, P_w = wacmw.generate_world(n_rows, n_cols, task_states, walls, 'stochastic', fail_chance)
     print('### Computing Costs and Creating Task MDPs ###')
-    mdps_w = {}
-    mdp_pols = {}
+    mdps = {}
+    pols = {}
     q_mdps_w = {}
     v_mdps_w = {}
-    task_mdps_w = {}
-    task_mdp_pols = {}
+    leg_mdps = {}
+    leg_pols = {}
     costs = []
     dists = []
-    print('Optimal task MDPs')
-    for i in tqdm(range(len(tasks)), desc='Optimal Task MDPs'):
+    print('Creating optimal task MDPs')
+    sys.stdout.flush()
+    sys.stderr.flush()
+    for i in range(len(tasks)):
         c = wacmw.generate_rewards(tasks[i], X_w, A_w)
         costs += [c]
-        mdp = MDP(X_w, A_w, P_w, c, 0.9, get_goal_states(X_w, tasks[i]), 'rewards')
+        mdp = MDP(X_w, A_w, P_w, c, 0.9, get_goal_states(X_w, tasks[i]), 'rewards', verbose)
         pol, q = mdp.policy_iteration()
         v = Utilities.v_from_q(q, pol)
         q_mdps_w[tasks[i]] = q
         v_mdps_w[tasks[i]] = v
-        dists += [mdp.policy_dist(pol)]
-        mdp_pols['mdp_' + str(i + 1)] = pol
-        mdps_w['mdp_' + str(i + 1)] = mdp
-    print('Legible task MDPs')
+        # dists += [mdp.policy_dist(pol)]
+        pols['mdp_' + str(i + 1)] = pol
+        mdps['mdp_' + str(i + 1)] = mdp
+    print('Creating legible task MDPs')
+    sys.stdout.flush()
+    sys.stderr.flush()
     leg_costs = []
     dists = np.array(dists)
-    for i in tqdm(range(len(tasks)), desc='Legible Task MDPs'):
-        mdp = LegibleTaskMDP(X_w, A_w, P_w, 0.9, tasks[i], task_states, tasks, 0.5, get_goal_states(X_w, tasks[i]), 1,
+    for i in range(len(tasks)):
+        mdp = LegibleTaskMDP(X_w, A_w, P_w, 0.9, verbose, tasks[i], task_states, tasks, 0.5, get_goal_states(X_w, tasks[i]), 1,
                              leg_func, q_mdps=q_mdps_w, v_mdps=v_mdps_w, dists=dists)
         leg_pol, _ = mdp.policy_iteration(i)
         leg_costs += [mdp.costs[i, :]]
-        task_mdps_w['leg_mdp_' + str(i + 1)] = mdp
-        task_mdp_pols['leg_mdp_' + str(i + 1)] = leg_pol
+        leg_mdps['mdp_' + str(i + 1)] = mdp
+        leg_pols['mdp_' + str(i + 1)] = leg_pol
 
     print('Creating IRL Agent')
+    sys.stdout.flush()
+    sys.stderr.flush()
     if agent.find('optim') != -1:
         c = costs
         sign = -1
@@ -120,127 +357,68 @@ def main():
     else:
         print(colored('[ERROR] Invalid agent type, exiting program!', color='red'))
         return
-
-    step = 1
-    learner = LearnerMDP(X_w, A_w, P_w, 0.9, c, sign)
-
-    for rep in range(n_reps):
-        if mode.find('single') != -1:
-            n_trajs = args.n_trajs
-            traj_len = args.traj_len
-            x0 = args.x0 + ' N'
+    learner = LearnerMDP(X_w, A_w, P_w, 0.9, c, sign, verbose)
+   
+    # Load test parameters
+    print('Load Testing parameters')
+    with open(data_dir / 'configs' / 'irl_test.yaml') as file:
+        state_goals = yaml.full_load(file)
+        
+    if mode.find('trajectory') != -1:
+       
+        print('Starting trajectory IRL evaluation. Launching subprocesses')
+        sys.stdout.flush()
+        sys.stderr.flush()
+        procs = []
+        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'optimal' + '.txt')
+        opt_process = Process(target=eval_trajectory,
+                    args=(X_w, A_w, args.traj_len, learner, mdps, pols, n_reps, state_goals['trajectory'],
+                          tasks, data_dir, 'optimal', agent, mode, True, log_file))
+        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'legible' + '.txt')
+        leg_process = Process(target=eval_trajectory,
+                    args=(X_w, A_w, args.traj_len, learner, leg_mdps, leg_pols, n_reps, state_goals['trajectory'],
+                          tasks, data_dir, 'legible', agent, mode, False, log_file))
+    
+        opt_process.start()
+        procs.append(opt_process)
+        leg_process.start()
+        procs.append(leg_process)
+    
+        print('Trajectory IRL evaluation finished. Joining subprocesses')
+        sys.stdout.flush()
+        sys.stderr.flush()
+        for p in procs:
+            p.join()
             
-            for goal in tasks:
-    
-                print('------------------------------------------------------------------------')
-                print('Evaluation for task: %s' % goal)
-                mdp = mdps_w['mdp_' + str(tasks.index(goal) + 1)]
-                task_mdp = task_mdps_w['leg_mdp_' + str(tasks.index(goal) + 1)]
-                opt_pol = mdp_pols['mdp_' + str(tasks.index(goal) + 1)]
-                leg_pol = task_mdp_pols['leg_mdp_' + str(tasks.index(goal) + 1)]
-    
-                print('Creating demo trajectories')
-                print('Optimal trajectories')
-                opt_trajs = []
-                for _ in tqdm(range(n_trajs)):
-                    t1, a1 = mdp.trajectory_len(x0, opt_pol, traj_len)
-                    traj = []
-                    for i in range(len(t1)):
-                        traj += [[list(X_w).index(t1[i]), list(A_w).index(a1[i])]]
-                    opt_trajs += [np.array(traj)]
-                
-                print('Legible trajectories')
-                leg_trajs = []
-                for _ in tqdm(range(n_trajs)):
-                    traj = []
-                    task_traj, task_act = task_mdp.trajectory_len(x0, leg_pol, traj_len)
-                    for i in range(len(task_traj)):
-                        traj += [[list(X_w).index(task_traj[i]), list(A_w).index(task_act[i])]]
-                    leg_trajs += [np.array(traj)]
-    
-                if goal not in opt_correct_count:
-                    opt_correct_count[goal] = np.zeros(traj_len)
-                if goal not in opt_average_confidence:
-                    opt_average_confidence[goal] = np.zeros(traj_len)
-                if goal not in leg_correct_count:
-                    leg_correct_count[goal] = np.zeros(traj_len)
-                if goal not in leg_average_confidence:
-                    leg_average_confidence[goal] = np.zeros(traj_len)
-    
-                print('Testing inference of cost')
-                opt_count, opt_confidence = learner.learner_eval(1, opt_trajs, traj_len, step, tasks.index(goal))
-                leg_count, leg_confidence = learner.learner_eval(1, leg_trajs, traj_len, step, tasks.index(goal))
-    
-                opt_correct_count[goal] += opt_count / n_trajs
-                leg_correct_count[goal] += leg_count / n_trajs
-    
-                opt_average_confidence[goal] += opt_confidence
-                leg_average_confidence[goal] += leg_confidence
-                
-        elif mode.find('random') != -1:
-            
-            n_samples = args.n_samples
-            batch_size = args.batch_size
-            n_batches = n_samples // batch_size
-            sample_states = []
-            for i in range(n_batches):
-                sample_states += [np.random.choice(len(X_w), size=batch_size)]
-            sample_states = np.array(sample_states)
-            
-            for goal in tasks:
-                opt_pol = mdp_pols['mdp_' + str(tasks.index(goal) + 1)]
-                leg_pol = task_mdp_pols['leg_mdp_' + str(tasks.index(goal) + 1)]
-                
-                opt_samples = []
-                leg_samples = []
-                for i in range(n_batches):
-                    opt_samples_tmp = []
-                    leg_samples_tmp = []
-                    for state in sample_states[i]:
-                        opt_action = np.random.choice(len(A_w), p=opt_pol[state, :])
-                        leg_action = np.random.choice(len(A_w), p=leg_pol[state, :])
-                        
-                        opt_samples_tmp += [[state, opt_action]]
-                        leg_samples_tmp += [[state, leg_action]]
-                    opt_samples += [np.array(opt_samples_tmp)]
-                    leg_samples += [np.array(leg_samples_tmp)]
-    
-                if goal not in opt_correct_count:
-                    opt_correct_count[goal] = np.zeros(batch_size)
-                if goal not in opt_average_confidence:
-                    opt_average_confidence[goal] = np.zeros(batch_size)
-                if goal not in leg_correct_count:
-                    leg_correct_count[goal] = np.zeros(batch_size)
-                if goal not in leg_average_confidence:
-                    leg_average_confidence[goal] = np.zeros(batch_size)
-    
-                print('Testing inference of cost')
-                opt_count, opt_confidence = learner.learner_eval(1, opt_samples, batch_size, step, tasks.index(goal))
-                leg_count, leg_confidence = learner.learner_eval(1, leg_samples, batch_size, step, tasks.index(goal))
+    elif mode.find('sample') != -1:
+       
+        print('Starting sample IRL evaluation. Launching subprocesses')
+        sys.stdout.flush()
+        sys.stderr.flush()
+        procs = []
+        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'optimal' + '.txt')
+        opt_process = Process(target=eval_samples,
+                    args=(list(X_w), A_w, args.batch_size, learner, pols, n_reps, state_goals['sample'], tasks, data_dir,
+                          'optimal', agent, mode, True, log_file))
+        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'legible' + '.txt')
+        leg_process = Process(target=eval_samples,
+                    args=(list(X_w), A_w, args.batch_size, learner, leg_pols, n_reps, state_goals['sample'], tasks, data_dir,
+                          'legible', agent, mode, False, log_file))
 
-                opt_correct_count[goal] += opt_count / n_batches
-                leg_correct_count[goal] += leg_count / n_batches
+        opt_process.start()
+        procs.append(opt_process)
+        leg_process.start()
+        procs.append(leg_process)
 
-                opt_average_confidence[goal] += opt_confidence
-                leg_average_confidence[goal] += leg_confidence
+        print('Sample IRL evaluation finished. Joining subprocesses')
+        sys.stdout.flush()
+        sys.stderr.flush()
+        for p in procs:
+            p.join()
 
-        else:
-            print(colored('[ERROR] Invalid performance mode, exiting program!', color='red'))
-            return
-
-        print('Done %d%% of repetitions' % (round(rep + 1 * 100 / n_reps, 0)))
-        print('--------------------------------------------------')
-
-    for goal in tasks:
-
-        print('Performance results for agent %s and task %s' % (agent, goal))
-        print('Optimal trajectory correct inference: ' + str(opt_correct_count[goal] / n_reps))
-        print('Optimal trajectory inference confidence: ' + str(opt_average_confidence[goal] / n_reps))
-        print('\n')
-        print('Legible trajectory correct inference: ' + str(leg_correct_count[goal] / n_reps))
-        print('Legible trajectory inference confidence: ' + str(leg_average_confidence[goal] / n_reps))
-        print('\n')
-        print('------------------------------------------------------------------------')
+    else:
+        print(colored('[ERROR] Invalid performance mode, exiting program!', color='red'))
+        return
 
 
 if __name__ == '__main__':

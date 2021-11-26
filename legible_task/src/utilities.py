@@ -1,9 +1,77 @@
 #! /usr/bin/env python
 
 import numpy as np
+import json
 
 from tqdm import tqdm
 from typing import List, Dict, Tuple
+from pathlib import Path
+
+
+class InvalidEvaluationTypeError(Exception):
+    
+    def __init__(self, eval_type, message="Evaluation type is not in list [scale, goals]"):
+        self.eval_type = eval_type
+        self.message = message
+        super().__init__(self.message)
+    
+    def __str__(self):
+        return f'{self.eval_type} -> {self.message}'
+
+
+class InvalidEvaluationMetricError(Exception):
+    
+    def __init__(self, metric, message="Chosen evaluation metric is not among the possibilities: miura, policy or time"):
+        self.metric = metric
+        self.message = message
+        super().__init__(self.message)
+    
+    def __str__(self):
+        return f'{self.metric} -> {self.message}'
+
+
+class InvalidFrameworkError(Exception):
+    
+    def __init__(self, metric, message="Chosen framework choice is not available. Available options are: policy or miura"):
+        self.metric = metric
+        self.message = message
+        super().__init__(self.message)
+    
+    def __str__(self):
+        return f'{self.metric} -> {self.message}'
+
+
+class TimeoutException(Exception):
+    
+    def __init__(self, max_time, message="Could not finish evaluation in under 2 hours."):
+        self.max_time = max_time
+        self.message = message
+        super().__init__(self.message)
+    
+    def __str__(self):
+        return f'{self.max_time} -> {self.message}'
+
+
+def signal_handler(signum, frame):
+    raise TimeoutException(7200)
+
+
+def store_savepoint(file_path: Path, results: Dict, iteration: int) -> None:
+    # Create JSON with save data
+    save_data = dict()
+    save_data['results'] = results
+    save_data['iteration'] = iteration
+    
+    # Save data to file
+    with open(file_path, 'w') as json_file:
+        json.dump(save_data, json_file)
+
+
+def load_savepoint(file_path: Path) -> Tuple[Dict, int]:
+    json_file = open(file_path, 'r')
+    data = json.load(json_file)
+    
+    return data['results'], data['iteration']
 
 
 def value_iteration(mdp: Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float]) -> np.ndarray:

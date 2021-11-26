@@ -832,12 +832,13 @@ class MiuraLegibleMDP(MDP):
 
 class LearnerMDP(object):
 	
-	def __init__(self, x, a, p, gamma, rewards, sign):
+	def __init__(self, x: np.ndarray, a: List, p: Dict, gamma: float, rewards: List, sign: int, verbose: bool):
 		self._mdp_r = (x, a, p, gamma)
 		self._pol = np.zeros((len(x), len(a)))
 		self._reward = np.zeros((len(x), len(a)))
 		self._reward_library = rewards
 		self._sign = sign
+		self._verbose = verbose
 		pol_library = []
 		q_library = []
 		for i in range(len(rewards)):
@@ -937,7 +938,8 @@ class LearnerMDP(object):
 		low_magnitude = math.floor(math.log(np.min(r_likelihood), 10)) - 2
 		p_max = np.isclose(r_likelihood, max_likelihood, atol=10 ** low_magnitude, rtol=10 ** low_magnitude).astype(int)
 		p_max = p_max / p_max.sum( )
-		reward_idx = np.random.choice(len(self._reward_library), p=p_max)
+		#reward_idx = np.random.choice(len(self._reward_library), p=p_max)
+		reward_idx = np.argmax(p_max)
 		reward_conf = p_max[reward_idx]
 		
 		return self._reward_library[reward_idx], reward_idx, reward_conf
@@ -992,7 +994,8 @@ class LearnerMDP(object):
 		i = 0
 		
 		while not quit:
-			print('Iteration %d' % (i + 1), end='\r')
+			if self._verbose:
+				print('Iteration %d' % (i + 1), end='\r')
 			
 			J = self.evaluate_pol(pol, c)
 			
@@ -1007,7 +1010,8 @@ class LearnerMDP(object):
 			pol = polnew
 			i += 1
 		
-		print('N. iterations: ', i)
+		if self._verbose:
+			print('N. iterations: ', i)
 		
 		return pol, Q
 	
@@ -1055,13 +1059,14 @@ class LearnerMDP(object):
 		for traj in trajs:
 			for i in range(n_idx):
 				idx = indexes[i]
-				reward, r_idx, r_conf = self.birl_inference(traj[:idx], conf)
+				_, r_idx, r_conf = self.birl_inference(traj[:idx], conf)
 				if r_idx == goal:
 					correct_count[i] += 1
 					inference_conf[i] += r_conf
 			
 			it += 1
-			print('Completed %d%% of trajectories' % (int(it / n_trajs * 100)), end='\r')
+			if self._verbose:
+				print('Completed %d%% of trajectories' % (int(it / n_trajs * 100)), end='\r')
 		
 		avg_inference_conf = []
 		for i in range(n_idx):
@@ -1070,8 +1075,9 @@ class LearnerMDP(object):
 			else:
 				avg_inference_conf += [0.0]
 		
-		print('Finished.')
-		return correct_count, avg_inference_conf
+		if self._verbose:
+			print('Finished.')
+		return correct_count, np.array(avg_inference_conf)
 
 
 def main( ):
