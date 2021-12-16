@@ -24,20 +24,19 @@ from multiprocessing import Process
 def write_iteration_results_csv(csv_file: Path, results: Dict, access_type: str, fields: List[str], iteration_states: List[str], n_iteration: int) -> None:
     try:
         with open(csv_file, access_type) as csvfile:
-            field_names = ['iteration'] + fields
+            field_names = ['iteration'] + sorted(fields)
             it_idx = str(n_iteration) + ' ' + ' '.join(iteration_states)
             row = [it_idx]
             for key, val in sorted(results.items()):
                 inner_keys = list(results[key].keys())
                 for inner_key in inner_keys:
-                    print(results[key][inner_key])
                     row += [results[key][inner_key]]
-            print(row)
+                    
             if access_type != 'a':
                 headers = ', '.join(field_names)
-                np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', header=headers, fmt='%s', comments='')
+                np.savetxt(fname=csvfile, X=np.array([row], dtype=object), delimiter=',', header=headers, fmt='%s', comments='')
             else:
-                np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', fmt='%s', comments='')
+                np.savetxt(fname=csvfile, X=np.array([row], dtype=object), delimiter=',', fmt='%s', comments='')
     
     except IOError as e:
         print(colored("I/O error: " + str(e), color='red'))
@@ -47,21 +46,17 @@ def write_full_results_csv(csv_file: Path, results: Dict, access_type: str, fiel
     try:
         print('Results to write: ' + str(list(results.items())))
         with open(csv_file, access_type) as csvfile:
-            i = 0
-            field_names = ['action_type'] + fields
+            row = [action_type]
             for key, val in sorted(results.items()):
-                row = [action_type]
                 inner_keys = list(results[key].keys())
                 for inner_key in inner_keys:
                     row += [results[key][inner_key]]
                 
-                if access_type != 'a' and i < 1:
-                    headers = ', '.join(field_names)
-                    np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', header=headers, fmt='%s', comments='')
-                else:
-                    np.savetxt(fname=csvfile, X=np.array([row]), delimiter=',', fmt='%s', comments='')
-                
-                i += 1
+            if access_type != 'a':
+                headers = ', '.join(sorted(fields))
+                np.savetxt(fname=csvfile, X=np.array([row], dtype=object), delimiter=',', header=headers, fmt='%s', comments='')
+            else:
+                np.savetxt(fname=csvfile, X=np.array([row], dtype=object), delimiter=',', fmt='%s', comments='')
     
     except IOError as e:
         print(colored("I/O error: " + str(e), color='red'))
@@ -80,14 +75,14 @@ def get_goal_states(states: np.ndarray, goal: str) -> List[int]:
 
 
 def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learner: LearnerMDP, mdps: Dict[str, MDP], pols: Dict[str, np.ndarray],
-                    n_reps, state_goals: List[str], tasks: List[str], data_dir: Path, action_type: str, agent: str,
+                    n_reps: int, conf: float, state_goals: List[str], tasks: List[str], data_dir: Path, action_type: str, world: str, agent: str,
                     mode: str, header: bool, log_file: Path) -> None:
     
     sys.stdout = open(log_file, 'w')
     sys.stderr = open(log_file, 'a')
     n_trajs = 1
     # Verify if a savepoint exists to restart from
-    savepoint_file = data_dir / 'results' / ('irl_evaluation_' + agent + '_' + mode + '_' + action_type + '.save')
+    savepoint_file = data_dir / 'results' / ('irl_evaluation_' + world + '_' + agent + '_' + mode + '_' + action_type + '.save')
     if savepoint_file.exists():
         print('Restarting evaluation. Loading savepoint.')
         eval_results, eval_begin = load_savepoint(savepoint_file)
@@ -95,7 +90,7 @@ def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learn
         print('Starting evaluation from beginning.')
         eval_results = dict()
         eval_results['correct'] = dict()
-        eval_results['confidence'] = dict()
+        eval_results['p_confidence'] = dict()
         eval_begin = 0
    
     for rep in range(eval_begin, n_reps):
@@ -103,7 +98,7 @@ def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learn
         x0 = state_goals[rep]
         iteraction_res = dict()
         iteraction_res['correct'] = dict()
-        iteraction_res['confidence'] = dict()
+        iteraction_res['p_confidence'] = dict()
         iteraction_res['trajectory'] = dict()
         
         for goal in tasks:
@@ -114,25 +109,26 @@ def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learn
             
             print('Creating trajectories')
             traj = []
-            task_traj, task_act = mdp.trajectory_len(x0, pol, traj_len)
+            rng_gen = np.random.default_rng(2021)
+            task_traj, task_act = mdp.trajectory_len(x0, pol, traj_len, rng_gen)
             for i in range(len(task_traj)):
                 traj += [[list(states).index(task_traj[i]), list(actions).index(task_act[i])]]
     
             print('Testing inference of cost')
             if goal not in eval_results['correct']:
                 eval_results['correct'][goal] = np.zeros(traj_len)
-            if goal not in eval_results['confidence']:
-                eval_results['confidence'][goal] = np.zeros(traj_len)
-            learner_count, learner_confidence = learner.learner_eval(1, [traj], traj_len, 1, tasks.index(goal))
+            if goal not in eval_results['p_confidence']:
+                eval_results['p_confidence'][goal] = np.zeros(traj_len)
+            learner_count, learner_confidence = learner.learner_eval(conf, [traj], traj_len, 1, tasks.index(goal))
             eval_results['correct'][goal] += learner_count / (n_trajs * n_reps)
-            eval_results['confidence'][goal] += learner_confidence / n_reps
+            eval_results['p_confidence'][goal] += learner_confidence / n_reps
             iteraction_res['correct'][goal] = learner_count
-            iteraction_res['confidence'][goal] = learner_confidence
+            iteraction_res['p_confidence'][goal] = learner_confidence
             iteraction_res['trajectory'][goal] = task_traj.T
 
         print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), rep, n_reps))
         print('Storing iteration data to file.')
-        it_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '_' + action_type + '.csv')
+        it_file = data_dir / 'results' / ('irl_evaluation_results_' + world + '_' + agent + '_' + mode + '_' + action_type + '.csv')
         results_keys = list(iteraction_res.keys())
         field_names = []
         for key in results_keys:
@@ -147,7 +143,7 @@ def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learn
 
     # Write evaluation results to file
     print('Finished evaluation for %s actions.\n' % action_type)
-    csv_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '.csv')
+    csv_file = data_dir / 'results' / ('irl_evaluation_results_' + world + '_' + agent + '_' + mode + '.csv')
     results_keys = list(eval_results.keys())
     field_names = ['action_type']
     for key in results_keys:
@@ -161,14 +157,15 @@ def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learn
         write_full_results_csv(csv_file, eval_results, 'a', field_names, action_type)
 
 
-def eval_samples(states: List[str], actions: List[str], batch_size: int, learner: LearnerMDP, pols: Dict[str, np.ndarray], n_reps, state_goals: List[List[str]], tasks: List[str],
-                 data_dir: Path, action_type: str, agent: str, mode: str, header: bool, log_file: Path) -> None:
+def eval_samples(states: List[str], actions: List[str], batch_size: int, learner: LearnerMDP, pols: Dict[str, np.ndarray], n_reps: int, conf: float,
+                 state_goals: List[List[str]], tasks: List[str], data_dir: Path, action_type: str, world: str, agent: str, mode: str,
+                 header: bool, log_file: Path) -> None:
     
     sys.stdout = open(log_file, 'w')
     sys.stderr = open(log_file, 'a')
     n_batches = 1
     # Verify if a savepoint exists to restart from
-    savepoint_file = data_dir / 'results' / ('irl_evaluation_' + agent + '_' + mode + '_' + action_type + '.save')
+    savepoint_file = data_dir / 'results' / ('irl_evaluation_' + world + '_' + agent + '_' + mode + '_' + action_type + '.save')
     if savepoint_file.exists():
         print('Restarting evaluation. Loading savepoint.')
         eval_results, eval_begin = load_savepoint(savepoint_file)
@@ -176,7 +173,7 @@ def eval_samples(states: List[str], actions: List[str], batch_size: int, learner
         print('Starting evaluation from beginning.')
         eval_results = dict()
         eval_results['correct'] = dict()
-        eval_results['confidence'] = dict()
+        eval_results['p_confidence'] = dict()
         eval_begin = 0
     
     for rep in range(eval_begin, n_reps):
@@ -184,7 +181,7 @@ def eval_samples(states: List[str], actions: List[str], batch_size: int, learner
         sample_states = state_goals[rep]
         iteraction_res = dict()
         iteraction_res['correct'] = dict()
-        iteraction_res['confidence'] = dict()
+        iteraction_res['p_confidence'] = dict()
         iteraction_res['trajectory'] = dict()
         
         for goal in tasks:
@@ -192,9 +189,10 @@ def eval_samples(states: List[str], actions: List[str], batch_size: int, learner
             
             samples_tmp = []
             samples_seq = []
+            rng_gen = np.random.default_rng(2021)
             for state in sample_states:
                 state_idx = states.index(state)
-                action = np.random.choice(len(actions), p=pol[state_idx, :])
+                action = rng_gen.choice(len(actions), p=pol[state_idx, :])
                 samples_seq += [state]
                 samples_tmp += [[state_idx, action]]
             samples = [np.array(samples_tmp)]
@@ -202,18 +200,18 @@ def eval_samples(states: List[str], actions: List[str], batch_size: int, learner
             print('Testing inference of cost')
             if goal not in eval_results['correct']:
                 eval_results['correct'][goal] = np.zeros(batch_size)
-            if goal not in eval_results['confidence']:
-                eval_results['confidence'][goal] = np.zeros(batch_size)
-            learner_count, learner_confidence = learner.learner_eval(1, samples, batch_size, 1, tasks.index(goal))
+            if goal not in eval_results['p_confidence']:
+                eval_results['p_confidence'][goal] = np.zeros(batch_size)
+            learner_count, learner_confidence = learner.learner_eval(conf, samples, batch_size, 1, tasks.index(goal))
             eval_results['correct'][goal] += learner_count / (n_batches * n_reps)
-            eval_results['confidence'][goal] += learner_confidence / n_reps
+            eval_results['p_confidence'][goal] += learner_confidence / n_reps
             iteraction_res['correct'][goal] = learner_count
-            iteraction_res['confidence'][goal] = learner_confidence
+            iteraction_res['p_confidence'][goal] = learner_confidence
             iteraction_res['trajectory'][goal] = np.array(samples_seq).T
             
         print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), rep, n_reps))
         print('Storing iteration data to file.')
-        it_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '_' + action_type + '.csv')
+        it_file = data_dir / 'results' / ('irl_evaluation_results_' + world + '_' + agent + '_' + mode + '_' + action_type + '.csv')
         results_keys = list(iteraction_res.keys())
         field_names = []
         for key in results_keys:
@@ -228,7 +226,7 @@ def eval_samples(states: List[str], actions: List[str], batch_size: int, learner
 
     # Write evaluation results to file
     print('Finished evaluation for %s actions.\n' % action_type)
-    csv_file = data_dir / 'results' / ('irl_evaluation_results_' + agent + '_' + mode + '.csv')
+    csv_file = data_dir / 'results' / ('irl_evaluation_results_' + world + '_' + agent + '_' + mode + '.csv')
     results_keys = list(eval_results.keys())
     field_names = ['action_type']
     for key in results_keys:
@@ -239,11 +237,11 @@ def eval_samples(states: List[str], actions: List[str], batch_size: int, learner
         write_full_results_csv(csv_file, eval_results, 'w', field_names, action_type)
     else:
         write_full_results_csv(csv_file, eval_results, 'a', field_names, action_type)
-           
+
 
 def main():
 
-    WORLD_CONFIGS = {1: '8x8_world.yaml', 2: '10x10_world.yaml', 3: '8x8_world_2.yaml', 4: '10x10_world_2.yaml', 5: '10x10_world_3.yaml'}
+    WORLD_CONFIGS = {1: '10x10_world', 2: '10x10_world_2', 3: '10x10_world_3', 4: '10x10_world_4'}
 
     parser = argparse.ArgumentParser(description='IRL task legibility in stochastic environment argument parser')
     parser.add_argument('--agent', dest='agent', type=str, required=True, choices=['optimal', 'legible'],
@@ -274,12 +272,13 @@ def main():
     # Parsing input arguments
     args = parser.parse_args()
     agent = args.agent
-    world = args.world
+    world_id = args.world
     mode = args.mode
     leg_func = args.leg_func
     n_reps = args.reps
     fail_chance = args.fail_chance
     verbose = args.verbose
+    world = WORLD_CONFIGS[world_id]
 
     # Setup script output files and locations
     script_parent_dir = Path(__file__).parent.absolute().parent.absolute()
@@ -287,12 +286,12 @@ def main():
     if not os.path.exists(script_parent_dir / 'logs'):
         os.mkdir(script_parent_dir / 'logs')
     log_dir = script_parent_dir / 'logs'
-    log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '.txt')
+    log_file = log_dir / ('irl_evaluation_log_' + world + '_' + agent + '_' + mode + '.txt')
     sys.stdout = open(log_file, 'w+')
     sys.stderr = open(log_file, 'a')
 
     # Load world configuration
-    with open(data_dir / 'configs' / WORLD_CONFIGS[world]) as file:
+    with open(data_dir / 'configs' / (world + '.yaml')) as file:
         config_params = yaml.full_load(file)
 
         n_cols = config_params['n_cols']
@@ -350,7 +349,7 @@ def main():
     sys.stderr.flush()
     if agent.find('optim') != -1:
         c = costs
-        sign = -1
+        sign = 1
     elif agent.find('leg') != -1:
         c = leg_costs
         sign = 1
@@ -363,21 +362,22 @@ def main():
     print('Load Testing parameters')
     with open(data_dir / 'configs' / 'irl_test.yaml') as file:
         state_goals = yaml.full_load(file)
-        
+    
+    conf = 1.0
     if mode.find('trajectory') != -1:
        
         print('Starting trajectory IRL evaluation. Launching subprocesses')
         sys.stdout.flush()
         sys.stderr.flush()
         procs = []
-        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'optimal' + '.txt')
+        log_file = log_dir / ('irl_evaluation_log_' + world + '_' + agent + '_' + mode + '_' + 'optimal' + '.txt')
         opt_process = Process(target=eval_trajectory,
-                    args=(X_w, A_w, args.traj_len, learner, mdps, pols, n_reps, state_goals['trajectory'],
-                          tasks, data_dir, 'optimal', agent, mode, True, log_file))
-        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'legible' + '.txt')
+                    args=(X_w, A_w, args.traj_len, learner, mdps, pols, n_reps, conf, state_goals[world]['trajectory'],
+                          tasks, data_dir, 'optimal', world, agent, mode, True, log_file))
+        log_file = log_dir / ('irl_evaluation_log_' + world + '_' + agent + '_' + mode + '_' + 'legible' + '.txt')
         leg_process = Process(target=eval_trajectory,
-                    args=(X_w, A_w, args.traj_len, learner, leg_mdps, leg_pols, n_reps, state_goals['trajectory'],
-                          tasks, data_dir, 'legible', agent, mode, False, log_file))
+                    args=(X_w, A_w, args.traj_len, learner, leg_mdps, leg_pols, n_reps, conf, state_goals[world]['trajectory'],
+                          tasks, data_dir, 'legible', world, agent, mode, False, log_file))
     
         opt_process.start()
         procs.append(opt_process)
@@ -396,14 +396,14 @@ def main():
         sys.stdout.flush()
         sys.stderr.flush()
         procs = []
-        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'optimal' + '.txt')
+        log_file = log_dir / ('irl_evaluation_log_' + world + '_' + agent + '_' + mode + '_' + 'optimal' + '.txt')
         opt_process = Process(target=eval_samples,
-                    args=(list(X_w), A_w, args.batch_size, learner, pols, n_reps, state_goals['sample'], tasks, data_dir,
-                          'optimal', agent, mode, True, log_file))
-        log_file = log_dir / ('irl_evaluation_log_' + agent + '_' + mode + '_' + 'legible' + '.txt')
+                    args=(list(X_w), A_w, args.batch_size, learner, pols, n_reps, conf, state_goals[world]['sample'], tasks, data_dir,
+                          'optimal', world, agent, mode, True, log_file))
+        log_file = log_dir / ('irl_evaluation_log_' + world + '_' + agent + '_' + mode + '_' + 'legible' + '.txt')
         leg_process = Process(target=eval_samples,
-                    args=(list(X_w), A_w, args.batch_size, learner, leg_pols, n_reps, state_goals['sample'], tasks, data_dir,
-                          'legible', agent, mode, False, log_file))
+                    args=(list(X_w), A_w, args.batch_size, learner, leg_pols, n_reps, conf, state_goals[world]['sample'], tasks, data_dir,
+                          'legible', world, agent, mode, False, log_file))
 
         opt_process.start()
         procs.append(opt_process)

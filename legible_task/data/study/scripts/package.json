@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "browserify": "^17.0.0",
+    "browserify-fs": "^1.0.0",
+    "chalk": "^5.0.0",
+    "socket.io": "^4.4.0"
+  },
+  "name": "scripts",
+  "version": "1.0.0",
+  "main": "read_videos.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

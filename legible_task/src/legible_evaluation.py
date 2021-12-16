@@ -78,14 +78,15 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 					data_dir: Path, n_iteration: int, world: str) -> None:
 	
 	# Auxiliary methods to test the performance of each framework in obtaining a sequence of legible actions
-	def policy_trajectory(task_mdp_w: LegibleTaskMDP, tasks: List[str], goal: str, x0: str) -> Tuple[np.ndarray, np.ndarray]:
+	def policy_trajectory(task_mdp_w: LegibleTaskMDP, tasks: List[str], goal: str, x0: str, rng_gen: np.random.Generator) -> Tuple[np.ndarray, np.ndarray]:
 		task_pol_w, _ = task_mdp_w.policy_iteration(tasks.index(goal))
-		task_traj = task_mdp_w.trajectory(x0, task_pol_w)
+		task_traj = task_mdp_w.trajectory(x0, task_pol_w, rng_gen)
 		return task_traj
 	
-	def miura_trajectory(mdp: MDP, miura_mdp: MiuraLegibleMDP, x0: str, depth: int, n_its: int, beta: float, verbose: bool) -> Tuple[np.ndarray, np.ndarray]:
+	def miura_trajectory(mdp: MDP, miura_mdp: MiuraLegibleMDP, x0: str, depth: int, n_its: int,
+						 beta: float, verbose: bool, rng_gen: np.random.Generator) -> Tuple[np.ndarray, np.ndarray]:
 		pol_w, _ = mdp.policy_iteration()
-		miura_traj = miura_mdp.legible_trajectory(x0, pol_w, depth, n_its, beta, verbose)
+		miura_traj = miura_mdp.legible_trajectory(x0, pol_w, depth, n_its, beta, verbose, rng_gen)
 		return miura_traj
 	
 	# Auxiliary methods to evaluate the legibility performance of each framework
@@ -98,7 +99,7 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 		return miura_mdp.trajectory_reward(trajs, task_idx)
 	
 	# Choose current goal and obtain the corresponding goal states
-	np.random.seed()
+	rng_gen = np.random.default_rng(2021)
 	x0 = state_goal[0]
 	goal = state_goal[1]
 	goal_states = get_goal_states(states, goal)
@@ -118,10 +119,10 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 		if framework == 'policy':
 			if metric == 'all':
 				# Obtain sample trajectory with each framework
-				policy_traj = policy_trajectory(policy_mdp, tasks, goal, x0)
+				policy_traj = policy_trajectory(policy_mdp, tasks, goal, x0, rng_gen)
 				
 				# Wrappers to run timeit on the trajectories for each framework
-				policy_stmt = wrapper(policy_trajectory, policy_mdp, tasks, goal, x0)
+				policy_stmt = wrapper(policy_trajectory, policy_mdp, tasks, goal, x0, rng_gen)
 				
 				# Performance evaluation
 				policy_m_performance = miura_evaluation(policy_traj, tasks.index(goal), miura_mdp)
@@ -163,21 +164,21 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 			else:
 				if metric == 'miura':
 					# Obtain sample trajectory with each framework
-					policy_traj = policy_trajectory(policy_mdp, tasks, goal, x0)
+					policy_traj = policy_trajectory(policy_mdp, tasks, goal, x0, rng_gen)
 					
 					# Performance evaluation according to the metric in Miura et al. and storing
 					policy_performance = miura_evaluation(policy_traj, tasks.index(goal), miura_mdp)
 				
 				elif metric == 'policy':
 					# Obtain sample trajectory with each framework
-					policy_traj = policy_trajectory(policy_mdp, tasks, goal, x0)
+					policy_traj = policy_trajectory(policy_mdp, tasks, goal, x0, rng_gen)
 					
 					# Performance evaluation according to the metric of policy legibility and storing
 					policy_performance = policy_evaluation(policy_traj, tasks.index(goal), policy_mdp)
 				
 				elif metric == 'time':
 					# Wrappers to run timeit on the trajectories for each framework
-					policy_stmt = wrapper(policy_trajectory, policy_mdp, tasks, goal, x0)
+					policy_stmt = wrapper(policy_trajectory, policy_mdp, tasks, goal, x0, rng_gen)
 					
 					# Time each framework's performance and store it
 					policy_performance = timeit.timeit(policy_stmt, number=1)
@@ -210,10 +211,10 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 		elif framework == 'miura':
 			if metric == 'all':
 				# Obtain sample trajectory with each framework
-				miura_traj = miura_trajectory(mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose)
+				miura_traj = miura_trajectory(mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose, rng_gen)
 				
 				# Wrappers to run timeit on the trajectories for each framework
-				miura_stmt = wrapper(miura_trajectory, mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose)
+				miura_stmt = wrapper(miura_trajectory, mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose, rng_gen)
 				
 				# Performance evaluation
 				miura_m_performance = miura_evaluation(miura_traj, tasks.index(goal), miura_mdp)
@@ -255,21 +256,21 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 			else:
 				if metric == 'miura':
 					# Obtain sample trajectory with each framework
-					miura_traj = miura_trajectory(mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose)
+					miura_traj = miura_trajectory(mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose, rng_gen)
 					
 					# Performance evaluation according to the metric in Miura et al. and storing
 					miura_performance = miura_evaluation(miura_traj, tasks.index(goal), miura_mdp)
 				
 				elif metric == 'policy':
 					# Obtain sample trajectory with each framework
-					miura_traj = miura_trajectory(mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose)
+					miura_traj = miura_trajectory(mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose, rng_gen)
 					
 					# Performance evaluation according to the metric of policy legibility and storing
 					miura_performance = policy_evaluation(miura_traj, tasks.index(goal), policy_mdp)
 				
 				elif metric == 'time':
 					# Wrappers to run timeit on the trajectories for each framework
-					miura_stmt = wrapper(miura_trajectory, mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose)
+					miura_stmt = wrapper(miura_trajectory, mdps['mdp' + str(tasks.index(goal) + 1)], miura_mdp, x0, 10, 10000, beta, verbose, rng_gen)
 					
 					# Time each framework's performance and store it
 					miura_performance = timeit.timeit(miura_stmt, number=1)
@@ -363,6 +364,7 @@ def world_iteration(states: np.ndarray, actions: List[str], transitions: Dict, b
 			else:
 				raise InvalidEvaluationTypeError(evaluation)
 	
+	signal.alarm(0)
 	# Dump iteration results to file
 	print('Writing iteration results to file.')
 	csv_file = data_dir / 'results' / ('evaluation_results_' + framework + '_' + evaluation + '_' + metric + '_' + world + '.csv')

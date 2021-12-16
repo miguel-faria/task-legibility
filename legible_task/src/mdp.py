@@ -261,7 +261,7 @@ class MDP(object):
 		
 		return pol, Q
 	
-	def trajectory_len(self, x0: str, pol: np.ndarray, traj_len: int) -> (np.ndarray, np.ndarray):
+	def trajectory_len(self, x0: str, pol: np.ndarray, traj_len: int, rng_gen: np.random.Generator) -> (np.ndarray, np.ndarray):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
@@ -274,16 +274,16 @@ class MDP(object):
 		x = list(X).index(x0)
 		
 		for _ in range(traj_len):
-			a = np.random.choice(nA, p=pol[x, :])
-			x = np.random.choice(nX, p=P[A[a]][x, :])
+			a = rng_gen.choice(nA, p=pol[x, :])
+			x = rng_gen.choice(nX, p=P[A[a]][x, :])
 			
 			traj += [X[x]]
 			actions += [A[a]]
 		
-		actions += [A[np.random.choice(nA, p=pol[x, :])]]
+		actions += [A[rng_gen.choice(nA, p=pol[x, :])]]
 		return np.array(traj), np.array(actions)
 	
-	def trajectory(self, x0: str, pol: np.ndarray) -> (np.ndarray, np.ndarray):
+	def trajectory(self, x0: str, pol: np.ndarray, rng_gen: np.random.Generator) -> (np.ndarray, np.ndarray):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
@@ -298,21 +298,21 @@ class MDP(object):
 		i = 0
 		
 		while not stop:
-			a = np.random.choice(nA, p=pol[x, :])
-			x = np.random.choice(nX, p=P[A[a]][x, :])
+			a = rng_gen.choice(nA, p=pol[x, :])
+			x = rng_gen.choice(nX, p=P[A[a]][x, :])
 			
 			traj += [X[x]]
 			actions += [A[a]]
 
 			stop = (x in self._goal_states or i > 500)
 			if stop:
-				actions += [A[np.random.choice(nA, p=pol[x, :])]]
+				actions += [A[rng_gen.choice(nA, p=pol[x, :])]]
 
 			i += 1
 		
 		return np.array(traj), np.array(actions)
 	
-	def all_trajectories(self, x0: str, pol: np.ndarray) -> (np.ndarray, np.ndarray):
+	def all_trajectories(self, x0: str, pol: np.ndarray, rng_gen: np.random.Generator) -> (np.ndarray, np.ndarray):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
@@ -337,7 +337,7 @@ class MDP(object):
 
 			while not stop_inner:
 				if x in self._goal_states:
-					a_traj += [A[np.random.choice(nA, p=pol[x, :])]]
+					a_traj += [A[rng_gen.choice(nA, p=pol[x, :])]]
 					add_traj = True
 					break
 				
@@ -346,17 +346,17 @@ class MDP(object):
 					if len(pol_act) > 1:
 						for j in range(1, len(pol_act)):
 							if len(np.nonzero(P[A[pol_act[j]]][x, :])) > 1:
-								x_tmp = np.random.choice(nX, p=P[A[pol_act[j]]][x, :])
+								x_tmp = rng_gen.choice(nX, p=P[A[pol_act[j]]][x, :])
 								while x_tmp == x:
-									x_tmp = np.random.choice(nX, p=P[A[pol_act[j]]][x, :])
+									x_tmp = rng_gen.choice(nX, p=P[A[pol_act[j]]][x, :])
 							else:
-								x_tmp = np.random.choice(nX, p=P[A[pol_act[j]]][x, :])
+								x_tmp = rng_gen.choice(nX, p=P[A[pol_act[j]]][x, :])
 							tmp_traj = [list(traj) + [X[x_tmp]], list(a_traj) + [A[pol_act[j]]]]
 							if tmp_traj not in started_trajs:
 								started_trajs += [tmp_traj]
 					
 					a = pol_act[0]
-					x = np.random.choice(nX, p=P[A[a]][x, :])
+					x = rng_gen.choice(nX, p=P[A[a]][x, :])
 					
 					if X[x] != traj[-1]:
 						traj += [X[x]]
@@ -364,7 +364,7 @@ class MDP(object):
 						
 						stop_inner = (x in self._goal_states)
 						if stop_inner:
-							a_traj += [A[np.random.choice(nA, p=pol[x, :])]]
+							a_traj += [A[rng_gen.choice(nA, p=pol[x, :])]]
 						
 						add_traj = True
 					
@@ -416,9 +416,9 @@ class MDP(object):
 		
 		return r_avg
 
-	def avg_dist(self, x0: str, pol: np.ndarray) -> int:
+	def avg_dist(self, x0: str, pol: np.ndarray, rng_gen: np.random.Generator) -> int:
 
-		trajs, _ = self.all_trajectories(x0, pol)
+		trajs, _ = self.all_trajectories(x0, pol, rng_gen)
 		dist = 0
 		n_trajs = len(trajs)
 		for traj in trajs:
@@ -426,7 +426,7 @@ class MDP(object):
 
 		return math.ceil(dist)
 
-	def policy_dist(self, pol: np.ndarray, task_idx: int = None) -> np.ndarray:
+	def policy_dist(self, pol: np.ndarray, rng_gen: np.random.Generator, task_idx: int = None) -> np.ndarray:
 
 		# dists = np.zeros(len(self.states))
 		dists = np.ones(len(self.states)) * 1000
@@ -434,7 +434,7 @@ class MDP(object):
 		q_pol = Utilities.q_from_pol(self, pol, task_idx)
 		possible_states = list(self.get_possible_states(q_pol))
 		for x in possible_states:
-			dists[x] = self.avg_dist(self.states[x], pol)
+			dists[x] = self.avg_dist(self.states[x], pol, rng_gen)
 
 		return dists
 
@@ -636,11 +636,12 @@ class MiuraLegibleMDP(MDP):
 		
 		def rollout(self, depth: int, discount: float, goal_states: List[int], pol: np.ndarray) -> (float, List[Tuple]):
 			
+			rng_gen = np.random.default_rng(int(time.time()))
 			A = self._mdp.actions
 			if depth == 0:
 				return 0.0, [(self._mdp.states[self._state],)]
 			
-			action = A[np.random.choice(range(self._num_actions), p=pol[self._state, :])]
+			action = A[rng_gen.choice(range(self._num_actions), p=pol[self._state, :])]
 			next_node, reward = self.simulate_action(action, goal_states)
 			
 			if self._terminal:
@@ -650,13 +651,15 @@ class MiuraLegibleMDP(MDP):
 				return reward + discount * future_reward, [(self._mdp.states[self._state], action)] + future_choices
 		
 		def simulate_action(self, action: str, goal_states: List[int]) -> (int, float):
+			
+			rng_gen = np.random.default_rng(int(time.time()))
 			nX = len(self._mdp.states)
 			A = list(self._mdp.actions)
 			act_idx = A.index(action)
 			P = self._mdp.transitions_prob
 			c = self._mdp.costs
 			
-			next_state = np.random.choice(nX, p=P[action][self._state, :])
+			next_state = rng_gen.choice(nX, p=P[action][self._state, :])
 			reward = c[next_state, act_idx]
 			
 			terminal_state = next_state in goal_states
@@ -705,11 +708,11 @@ class MiuraLegibleMDP(MDP):
 			self._objectives = mdp.tasks
 			self._objective = mdp.goal
 		
-		def simulate_action(self, action: str, goal_states: List[int]) -> (int, float):
+		def simulate_action(self, action: str, goal_states: List[int], rng_gen: np.random.Generator) -> (int, float):
 			nX = len(self._mdp.states)
 			P = self._mdp.transitions_prob
 			
-			next_state = np.random.choice(nX, p=P[action][self._state, :])
+			next_state = rng_gen.choice(nX, p=P[action][self._state, :])
 			belief = self._mdp.update_belief(self._state, action, next_state, self._belief)
 			reward = self._mdp.belief_reward(belief[self._objectives.index(self._objective)])
 			
@@ -753,7 +756,8 @@ class MiuraLegibleMDP(MDP):
 
 		return new_belief / new_belief.sum()
 
-	def legible_trajectory(self, x0: str, pol: np.ndarray, depth: int, n_its: int, beta: float, verbose: bool) -> (np.ndarray, np.ndarray):
+	def legible_trajectory(self, x0: str, pol: np.ndarray, depth: int, n_its: int, beta: float,
+						   verbose: bool, rng_gen: np.random.Generator) -> (np.ndarray, np.ndarray):
 		X = self._mdp[0]
 		A = self._mdp[1]
 		P = self._mdp[2]
@@ -774,7 +778,7 @@ class MiuraLegibleMDP(MDP):
 			
 			uct_node = MiuraLegibleMDP.MiuraMDPMCTSNode(nA, x, self, init_belief)
 			a = uct_node.uct(self._goal_states, n_its, depth, beta, pol, verbose)
-			x = np.random.choice(nX, p=P[A[a]][x, :])
+			x = rng_gen.choice(nX, p=P[A[a]][x, :])
 			
 			traj += [X[x]]
 			actions += [A[a]]
@@ -901,50 +905,42 @@ class LearnerMDP(object):
 		J = np.linalg.inv(np.eye(nX) - gamma * ppi).dot(cpi)
 		
 		return J
-	
-	def likelihood(self, x, a, conf):
-		A = self._mdp_r[1]
-		P = self._mdp_r[2]
-		gamma = self._mdp_r[3]
-		rewards = self._reward_library
-		pols = self._pol_library
-		nR = len(rewards)
+		
+	def sample_probability(self, x: int, a: int, conf: float) -> np.ndarray:
+		nR = len(self._reward_library)
 		likelihood = []
 		
 		for i in range(nR):
-			c = rewards[i]
-			J = self.evaluate_pol(pols[i], c)
-			q_star = np.zeros(len(A))
-			for act_idx in range(len(A)):
-				q_star[act_idx] = c[x, act_idx] + gamma * P[A[act_idx]][x, :].dot(J)
-			
-			likelihood += [np.exp(self._sign * conf * q_star[a]) / np.sum(np.exp(self._sign * conf * q_star))]
+			q = self._q_library[i]
+			likelihood += [np.exp(self._sign * conf * (q[x, a] - np.max(q[:, a]))) / np.sum(np.exp(self._sign * conf * (q[:, a] - np.max(q[:, a]))))]
 		
-		return likelihood
+		return np.array(likelihood)
 	
-	def birl_inference(self, traj, conf):
-		likelihoods = []
+	def birl_inference(self, samples: np.ndarray, conf: float) -> Tuple[np.ndarray, int, float]:
 		
-		for state, action in traj:
-			likelihood = []
-			for i in range(len(self._reward_library)):
-				q = self._q_library[i]
-				likelihood += [np.exp(self._sign * conf * q[state, action]) /
-							   np.sum(np.exp(self._sign * conf * q[state, :]))]
-			likelihoods += [likelihood]
+		rng_gen = np.random.default_rng(int(time.time()))
+		samples_likelihood = []
+		n_tasks = len(self._reward_library)
+		goal_prob = np.ones(n_tasks) / n_tasks
 		
-		r_likelihood = np.cumprod(np.array(likelihoods), axis=0)[-1]
+		for state, action in samples:
+			likelihood = goal_prob * self.sample_probability(state, action, conf)
+			goal_prob += np.array(likelihood)
+			samples_likelihood += [likelihood]
+		
+		r_likelihood = np.cumprod(np.array(samples_likelihood), axis=0)[-1]
 		max_likelihood = np.max(r_likelihood)
 		low_magnitude = math.floor(math.log(np.min(r_likelihood), 10)) - 2
 		p_max = np.isclose(r_likelihood, max_likelihood, atol=10 ** low_magnitude, rtol=10 ** low_magnitude).astype(int)
 		p_max = p_max / p_max.sum( )
-		#reward_idx = np.random.choice(len(self._reward_library), p=p_max)
-		reward_idx = np.argmax(p_max)
+		# reward_idx = rng_gen.choice(len(self._reward_library), p=p_max)
+		reward_idx = rng_gen.choice(np.argwhere(p_max == np.amax(p_max)).ravel())
 		reward_conf = p_max[reward_idx]
 		
 		return self._reward_library[reward_idx], reward_idx, reward_conf
 	
 	def birl_gradient_ascent(self, traj, conf, alpha):
+		
 		X = self._mdp_r[0]
 		A = self._mdp_r[1]
 		P = self._mdp_r[2]
@@ -953,6 +949,8 @@ class LearnerMDP(object):
 		c = self._reward
 		nX = len(X)
 		nA = len(A)
+		nT = len(self._reward_library)
+		goal_prob = np.ones(nT) / nT
 		
 		log_grad = np.zeros((nX, nA))
 		ppi = pol[:, 0, None] * P[A[0]]
@@ -961,19 +959,21 @@ class LearnerMDP(object):
 		T_inv = np.linalg.inv(np.eye(nX) - gamma * ppi)
 		
 		for state, action in traj:
-			sa_likelihood = self.likelihood(state, action, conf)
+			sample_likelihood = goal_prob * self.sample_probability(state, action, conf)
+			goal_prob = np.array(sample_likelihood)
 			
-			likelihood_q_derivative = conf * sa_likelihood * (1 - sa_likelihood)
+			likelihood_q_derivative = conf * sample_likelihood * (1 - sample_likelihood)
 			
 			q_r_derivative = 1 + gamma * P[A[action]][state, :].dot(T_inv[:, state]) * pol[state, action]
 			
 			likelihood_grad = likelihood_q_derivative * q_r_derivative
 			
-			log_grad[state, action] += 1 / sa_likelihood * likelihood_grad
+			log_grad[state, action] += 1 / sample_likelihood * likelihood_grad
 		
 		self._reward = c + alpha * log_grad
 	
 	def policy_iteration(self, c):
+		
 		X = self._mdp_r[0]
 		A = self._mdp_r[1]
 		P = self._mdp_r[2]
@@ -1015,7 +1015,8 @@ class LearnerMDP(object):
 		
 		return pol, Q
 	
-	def trajectory(self, goal, pol, x0):
+	def trajectory(self, goal, pol, x0, rng_gen: np.random.Generator):
+		
 		X = self._mdp_r[0]
 		A = self._mdp_r[1]
 		P = self._mdp_r[2]
@@ -1029,19 +1030,20 @@ class LearnerMDP(object):
 		stop = False
 		
 		while not stop:
-			a = np.random.choice(nA, p=pol[x, :])
-			x = np.random.choice(nX, p=P[A[a]][x, :])
+			a = rng_gen.choice(nA, p=pol[x, :])
+			x = rng_gen.choice(nX, p=P[A[a]][x, :])
 			
 			traj += [X[x]]
 			actions += [A[a]]
 			
 			stop = (X[x].find(goal) != -1)
 			if stop:
-				actions += [A[np.random.choice(nA, p=pol[x, :])]]
+				actions += [A[rng_gen.choice(nA, p=pol[x, :])]]
 		
 		return np.array(traj), np.array(actions)
 	
 	def learner_eval(self, conf, trajs, traj_len, demo_step, goal):
+		
 		indexes = []
 		n_trajs = len(trajs)
 		it = 0
