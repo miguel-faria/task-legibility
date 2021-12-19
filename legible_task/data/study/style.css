@@ -22,6 +22,97 @@ body {
   margin: 20px auto;
 }
 
+.play-button{
+  margin: 0;
+  position: relative;
+  top: 90%;
+  width: 10%;
+  color: aliceblue;
+  font-family: "Palatino", sans-serif;
+  font-size: 13px;
+  border: .5px solid rgb(37, 71, 36);
+  border-radius: 10px;
+  padding: 12px;
+  background-color: rgb(98, 207, 90);
+}
+
+.stop-button{
+  margin: 0;
+  position: relative;
+  top: 90%;
+  width: 10%;
+  color: aliceblue;
+  font-family: "Palatino", sans-serif;
+  font-size: 13px;
+  border: .5px solid rgb(124, 28, 28);
+  border-radius: 10px;
+  padding: 12px;
+  background-color: rgb(231, 83, 83);
+}
+
+.intro .play-button{
+  margin: 0;
+  position: relative;
+  left: 28%;
+  top: 90%;
+  width: 10%;
+  color: aliceblue;
+  font-family: "Palatino", sans-serif;
+  font-size: 13px;
+  border: .5px solid rgb(37, 71, 36);
+  border-radius: 10px;
+  padding: 12px;
+  background-color: rgb(98, 207, 90);
+}
+
+.intro .stop-button{
+  margin: 0;
+  position: relative;
+  left: 29%;
+  top: 90%;
+  width: 10%;
+  color: aliceblue;
+  font-family: "Palatino", sans-serif;
+  font-size: 13px;
+  border: .5px solid rgb(124, 28, 28);
+  border-radius: 10px;
+  padding: 12px;
+  background-color: rgb(231, 83, 83);
+}
+
+.daltonism .button{
+  width: 10%;
+  font-family: "Palatino", sans-serif;
+  font-size: 13px;
+  border: .5px solid rgb(116, 156, 197);
+  border-radius: 10px;
+  padding: 12px;
+  background-color: rgb(225, 243, 247);
+}
+
+.daltonism .button:hover {
+  background-color: rgb(225, 243, 247);
+  box-shadow: 0 0 10px 0 rgb(116, 156, 197),
+              0 0 10px 0 rgb(116, 156, 197),
+              0 0 10px 0 rgb(116, 156, 197) inset;
+}
+
+.daltonism .button:focus {
+  color: aliceblue;
+  background-color: rgb(38, 51, 63);
+  box-shadow: 0 0 10px 0 rgb(116, 156, 197),
+              0 0 10px 0 rgb(116, 156, 197),
+              0 0 10px 0 rgb(116, 156, 197) inset;
+}
+
+.daltonism .button:visited {
+  color: aliceblue;
+  background-color: rgb(38, 51, 63);
+  box-shadow: 0 0 10px 0 rgb(116, 156, 197),
+              0 0 10px 0 rgb(116, 156, 197),
+              0 0 10px 0 rgb(116, 156, 197) inset;
+}
+
 .agreement .button{
   width: 10%;
   font-family: "Palatino", sans-serif;
@@ -185,26 +276,14 @@ body {
   display: block;
 }
 
-.q3 {
-  display: none;
-}
-
-.q4 {
-  display: none;
-}
-
-.q5 {
-  display: none;
-}
-
 .unique-id {
+  position: relative;
   text-align: center;
+  left: 44%;
   width: 10%;
   font-size: 17px;
   font-weight: bold;
   border: 5px solid rgb(116, 156, 197);
   padding: 10px;
   margin: 10px;
-  position: relative;
-  left: 580px;
 }

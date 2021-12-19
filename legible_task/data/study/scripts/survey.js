@@ -1,35 +1,107 @@
 const ul_1 = document.querySelector(".options-1");
-const ul_2 = document.querySelector(".options-2");
-const ul_3 = document.querySelector(".options-3");
 const ul_likert = document.querySelector(".l1");
-const ul_likert_2 = document.querySelector(".l2");
 
 const q1 = document.querySelector(".q1");
 const q2 = document.querySelector(".q2");
-const q3 = document.querySelector(".q3");
-const q4 = document.querySelector(".q4");
-const q5 = document.querySelector(".q5");
 
 const test_conditions = ['legible', 'optimal'];
+const possible_goals = ['red', 'purple', 'blue', 'green', 'yellow', 'white'];
 var condition = '';
 var correct_goal = '';
 var loops_completed = 0;
 var n_loops = 4;
 var legible_videos = [];
 var optimal_videos = [];
-var answers = [];
+var answers = {};
 var got_prediction = false;
 var got_confidence = false;
 var retry = false;
 var demo_video = ''
 var predictions = [];
+var stop_disable = false;
+var video_time = 0.0;
+var score = 0.0;
 
 function initSurvey(){
-    let r_cond = Math.floor(Math.random() * test_conditions.length);
     let random_id = Math.floor(Math.random() * 1000000);
-    localStorage.setItem("condition", test_conditions[r_cond]);
+    while (used_ids['unique-ids'].includes(random_id)){
+        random_id = Math.floor(Math.random() * 1000000);
+    }
+    used_ids['unique-ids'].push(random_id);
+    if (condition_distribution["optimal"] > condition_distribution["legible"]){
+        condition = 'legible';
+    } else if (condition_distribution["optimal"] < condition_distribution["legible"]){
+        condition = 'optimal';
+    } else {
+        r_cond = Math.floor(Math.random() * test_conditions.length);
+        condition = test_conditions[r_cond];
+    }
+    localStorage.setItem("condition", condition);
     localStorage.setItem("unique-id", random_id);
-    console.log(random_id);
+    localStorage.setItem("score", score);
+    answers['unique-id'] = random_id;
+    answers['condition'] = condition;
+    condition_distribution[condition] = condition_distribution[condition] + 1;
+    localStorage.setItem("answers", JSON.stringify(answers));
+    retrieved_score = localStorage.getItem("score");
+    updateIDs();
+    updateConditions();
+}
+
+function loadSurvey() {
+    legible_videos = l_videos['legible'];
+    optimal_videos = l_videos['optimal'];
+    condition = localStorage.getItem("condition");
+    answers['daltonism'] = localStorage.getItem("dalt");
+    answers = JSON.parse(localStorage.getItem("answers"));
+    var video = document.getElementById("src-vq1");
+    demo_video = selectVideo(); 
+    video.src = demo_video;
+    video.load();
+    possible_goals.forEach(function(item, index){
+        if (demo_video.includes(item)){
+            correct_goal = item;
+        }
+    })
+    stop = document.getElementById("demo-stop-button");
+    stop.disabled = true;
+    stop.style.backgroundColor = "rgb(228, 181, 181)";
+    stop_disable = true;
+}
+
+function reloadSurvey(){
+    
+    storeAnswers();
+    loops_completed++;
+    if(loops_completed < n_loops){
+        demo_video = selectVideo();
+
+        // Enable first try questions
+        for(let i = 1; i < 7; i++){
+            button = document.querySelector('#objective-q1-' + i);
+            
+            button.style.backgroundColor = "rgb(225, 243, 247)";
+            button.style.color = "black";
+
+        }
+        button = document.querySelector('#confidence-q1');
+        button.style.backgroundColor = "rgb(225, 243, 247)";
+        button.style.color = "black";
+        stop = document.getElementById("demo-stop-button");
+        stop.disabled = true;
+        stop.style.backgroundColor = "rgb(228, 181, 181)";
+        stop_disable = true;
+        
+        ul_likert.querySelector('input[type=radio]:checked').checked = false;
+        retry = false;
+        got_prediction = false;
+        got_confidence = false;
+        var video = document.getElementById("src-vq1");
+        video.src = demo_video;
+
+    } else {
+        saveAnswers();
+    }
 }
 
 function getPrediction(objButton){ 
@@ -41,20 +113,22 @@ function getPrediction(objButton){
         button.style.color = "aliceblue";
         predictions.push('#' + id);
         if (id.includes("q1")) {
+            var video = document.getElementById("src-vq1");
+            console.log(video.currentTime);
             answers['it-' + (loops_completed + 1) + '-correct-prediction'] = correct_goal;
-            answers['it-' + (loops_completed + 1) + '-first-prediction'] = value;
-        } else if (id.includes("q2")) {
-            answers['it-' + (loops_completed + 1) + '-retry-prediction'] = value;
+            answers['it-' + (loops_completed + 1) + '-total-time'] = video.duration;
+            answers['it-' + (loops_completed + 1) + '-prediction'] = value;
+            answers['it-' + (loops_completed + 1) + '-prediction-time'] = video.currentTime;
+            total_time = video.duration - 5.0;
+            guess_time = video.currentTime - 5.0;
+            score = localStorage.getItem("score");
+            score += (value === correct_goal ? 1 : 0) * (((total_time - guess_time) / total_time) * (100 / n_loops));
+            localStorage.setItem("score", score);
         }
         console.log(answers);
         got_prediction = true;
         if (got_prediction & got_confidence){
-            if (!retry){
-                q3.disabled = false;
-                q3.style.display = "block";
-            } else {
-                reloadSurvey();
-            }
+            reloadSurvey();
         }
     }  
 }
@@ -65,78 +139,65 @@ function getConfidence(objButton){
         button = document.querySelector('#' + id);
         button.style.backgroundColor = "rgb(38, 51, 63)";
         button.style.color = "aliceblue";
-        if(!retry){
-            likert = ul_likert.querySelector('input[type=radio]:checked');
-            if(likert){
-                choice = likert.value; 
-                if (id.includes("q1")) {
-                    answers['it-' + (loops_completed + 1) + '-first-confidence'] = choice;
-                } else if (id.includes("q2")) {
-                    answers['it-' + (loops_completed + 1) + '-retry-confidence'] = choice;
-                }
-                console.log(answers);
-                got_confidence = true;
-                if (got_prediction & got_confidence & !retry){
-                    q3.disabled = false;
-                    q3.style.display = "block";
-                }
+        likert = ul_likert.querySelector('input[type=radio]:checked');
+        if(likert){
+            choice = likert.value; 
+            if (id.includes("q1")) {
+                answers['it-' + (loops_completed + 1) + '-confidence'] = choice;
             }
-        } else {
-            likert = ul_likert_2.querySelector('input[type=radio]:checked');
-            if(likert){
-                choice = likert.value; 
-                if (id.includes("q1")) {
-                    answers['it-' + (loops_completed + 1) + '-first-confidence'] = choice;
-                } else if (id.includes("q2")) {
-                    answers['it-' + (loops_completed + 1) + '-retry-confidence'] = choice;
-                }
-                console.log(answers);
-                got_confidence = true;
-                if (got_prediction & got_confidence){
-                    if (!retry){
-                        q3.disabled = false;
-                        q3.style.display = "block";
-                    } else {
-                        reloadSurvey();
-                    }
-                }
+            console.log(answers);
+            got_confidence = true;
+            if (got_prediction & got_confidence){
+                reloadSurvey();
             }
         }
     }
 }
 
-function getRetry(objButton){
-    choice = objButton.value;
-    id = objButton.id;
-    button = document.querySelector('#' + id);
-    button.style.backgroundColor = "rgb(38, 51, 63)";
-    button.style.color = "aliceblue";
-    if (choice === 'yes'){
-        // Disable first try questions
-        retry = true;
-        got_confidence = false;
-        got_prediction = false;
-        q1.disabled = true;
-        q1.style.display = "none";
-        q2.disabled = true;
-        q2.style.display = "none";
-        q3.disabled = true;
-        q3.style.display = "none";
+function videoControl(objButton){
 
-        // Enable retry questions
-        var video = document.getElementById("src-vq2");
-        video.src = demo_video;
-        q4.disabled = false;
-        q4.style.display = "block";
-        q5.disabled = false;
-        q5.style.display = "block";
+    let id = objButton.id;
+    let value = objButton.value;
 
-    } else if (choice === 'no'){
-        answers['it-' + (loops_completed + 1) + '-retry-prediction'] = '';
-        answers['it-' + (loops_completed + 1) + '-retry-confidence'] = '';
-        reloadSurvey();
-    
+    if (id.includes('intro')){
+        let video = document.getElementById("src-sample-video");
+        if (value.includes("stop")){
+            video.pause();
+        } else {
+            video.play();
+        }
+    }else {
+        let video = document.getElementById("src-vq1");
+        if (value.includes("stop")){
+            video.pause();
+        } else {
+            video.play();
+            if (stop_disable){
+                setTimeout(() => {
+                    stop = document.getElementById("demo-stop-button");
+                    stop.disabled = false;
+                    stop.style.backgroundColor = "rgb(231, 83, 83)";
+                }, 5000); //enable stop button after video plays for 5 seconds
+                stop_disable = false;
+            }
+        }
     }
+
+
+}
+
+function daltonismCheck(objButton){
+
+    value = objButton.value;
+
+    if (value.includes("yes")){
+        window.location.href="goodbye_dalt.php";
+    } else {
+        localStorage.setItem("dalt", "no");
+        objButton.style.backgroundColor = "rgb(38, 51, 63)";
+        objButton.style.color = "aliceblue";
+    }
+
 }
 
 function selectVideo(){
@@ -154,65 +215,51 @@ function selectVideo(){
     return video;
 }
 
-function loadSurvey() {
-    legible_videos = l_videos['legible'];
-    optimal_videos = l_videos['optimal'];
-    condition = localStorage.getItem("condition");
-    answers['condition'] = condition;
-    var video = document.getElementById("src-vq1");
-    demo_video = selectVideo(); 
-    video.src = demo_video;
-    video.load();
+function updateIDs(){
+    var httpc = new XMLHttpRequest();
+    var url = "scripts/update_ids.php";
+    httpc.open("POST", url, true);
+    httpc.onreadystatechange = function() {
+        if(httpc.readyState == 4 && httpc.status == 200){
+            console.log('Updating Unique IDs');
+        }
+    }
+    httpc.setRequestHeader("Content-type", "application/json");
+    data = JSON.stringify(used_ids);
+    httpc.send(data);
 }
 
-function reloadSurvey(){
-    
-    storeAnswers();
-    loops_completed++;
-    if(loops_completed < n_loops){
-        demo_video = selectVideo();
-
-        // Enable first try questions
-        ul_likert.querySelector('input[type=radio]:checked').checked = false;
-        if(retry)
-            ul_likert_2.querySelector('input[type=radio]:checked').checked = false;
-        retry = false;
-        got_prediction = false;
-        got_confidence = false;
-        var video = document.getElementById("src-vq1");
-        video.src = demo_video;
-        q1.disabled = false;
-        q1.style.display = "block";
-        q2.disabled = false;
-        q2.style.display = "block";
-        q3.disabled = true;
-        q3.style.display = "none";
-
-        // Disable retry questions
-        q4.disabled = true;
-        q4.style.display = "none";
-        q5.disabled = true;
-        q5.style.display = "none";
-    } else {
-        saveAnswers();
+function updateConditions(){
+    var httpc = new XMLHttpRequest();
+    var url = "scripts/update_condition_dist.php";
+    httpc.open("POST", url, true);
+    httpc.onreadystatechange = function() {
+        if(httpc.readyState == 4 && httpc.status == 200){
+            console.log('Updating Conditions Distribution');
+        }
     }
+    httpc.setRequestHeader("Content-type", "application/json");
+    data = JSON.stringify(condition_distribution);
+    httpc.send(data);
 }
 
 function saveAnswers(){
 
     var httpc = new XMLHttpRequest();
-    var url = "write_answers.php";
+    var url = "scripts/write_answers.php";
     httpc.open("POST", url, true);
     httpc.onreadystatechange = function() {
         if(httpc.readyState == 4 && httpc.status == 200){
             console.log('Saving Answers');
         }
     }
+    httpc.setRequestHeader("Content-type", "application/json");
     data = [];
-    data['headers'] = answers.keys();
-    data['answers'] = answers;
-    httpc.send('answers=' + JSON.stringify(answers));
-    window.location.href='goodbye.php';
+    data['headers'] = Object.keys(answers);
+    data['answers'] = Object.values(answers);
+    console.log(data);
+    httpc.send(JSON.stringify(data));
+    /*window.location.href='goodbye.php';*/
 }
 
 function storeAnswers(){

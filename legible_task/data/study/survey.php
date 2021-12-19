@@ -28,9 +28,15 @@
     ?>
     <div class="survey">
         <div class="q1">
-            <video id="src-vq1" width="1280" height="720" class="vq1" controls autoplay>
-                <source src="" type="video/mp4">
-            </video>
+            <div class="q1-video">
+                <video id="src-vq1" width="1280" height="720" class="vq1">
+                    <source src="" type="video/mp4">
+                </video>
+                <ul>
+                    <button id='demo-play-button' class="play-button" type="submit" value="play" onclick='videoControl(this)'>Play</button>
+                    <button id='demo-stop-button' class="stop-button" type="submit" value="stop" onclick='videoControl(this)'>Stop</button>
+                </ul>
+            </div>
             <h3>Where is the robot heading?</h3>
             <div class="options-obj">
                 <ul class="options-1">
@@ -83,76 +89,10 @@
                 </form>
             </div>
         </div>
-        <div class="q3">
-            <h3>Would you like to change your prediction?</h3>
-            <div class="options-yn">
-                <ul class="options-2">
-                    <button id='q1-y-1' class="button" type="submit" value="yes" onclick='getRetry(this)'>Yes</button>
-                    <button id='q1-n-2' class="button" type="submit" value="no" onclick='getRetry(this)'>No</button>
-                </ul>
-            </div>
-        </div>
-        <div class="q4">
-            <video id="src-vq2" width="1280" height="720" class="vq1" controls autoplay>
-                <source src="" type="video/mp4">
-            </video>
-            <h3>Where is the robot heading?</h3>
-            <div class="options-obj">
-                <ul class="options-3">
-                    <button id='objective-q2-1' class="button" type="button" value="blue" onclick='getPrediction(this)'>Blue circle</button>
-                    <button id='objective-q2-2' class="button" type="button" value="green" onclick='getPrediction(this)'>Green circle</button>
-                    <button id='objective-q2-3' class="button" type="button" value="purple" onclick='getPrediction(this)'>Purple circle</button>
-                    <button id='objective-q2-4' class="button" type="button" value="red" onclick='getPrediction(this)'>Red circle</button>
-                    <button id='objective-q2-5' class="button" type="button" value="yellow" onclick='getPrediction(this)'>Yellow circle</button>
-                    <button id='objective-q2-6' class="button" type="button" value="white" onclick='getPrediction(this)'>White circle</button>
-                </ul>
-            </div>
-        </div>
-        <div class="q5">
-            <h3>Rate your confidence in your prediction?</h3>
-            <div class="wrap">
-                <form action="">
-                    <ul class='likert'>
-                        <div class="l2">
-                            <li>
-                                <input type="radio" name="likert" value=1>
-                                <label>1</label>
-                            </li>
-                            <li>
-                                <input type="radio" name="likert" value=2>
-                                <label>2</label>
-                            </li>
-                            <li>
-                                <input type="radio" name="likert" value=3>
-                                <label>3</label>
-                            </li>
-                            <li>
-                                <input type="radio" name="likert" value=4>
-                                <label>4</label>
-                            </li>
-                            <li>
-                                <input type="radio" name="likert" value=5>
-                                <label>5</label>
-                            </li>
-                            <li>
-                                <input type="radio" name="likert" value=6>
-                                <label>6</label>
-                            </li>
-                            <li>
-                                <input type="radio" name="likert" value=7>
-                                <label>7</label>
-                            </li>
-                            <button id='confidence-q2' class="button" type="button" onclick='getConfidence(this)'>Submit</button>
-                        </div>
-                    </ul>
-                </form>
-            </div>
-        </div>
         
-    </div>
-    <div class="next">
+    <!--div class="next">
         <button onclick="submitChoices()" class="button">Next</button>
-    </div>
+    </div-->
     <script type="text/javascript">var l_videos = <?php echo json_encode($fileArray); ?>;</script>
     <script type="text/javascript" src="scripts/survey.js"></script>
 </body>
