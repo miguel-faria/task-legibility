@@ -23,15 +23,17 @@ def main():
     parser = argparse.ArgumentParser(description='Convert WeBots simulation snippets to video')
     parser.add_argument('--mode', type=str, required=True, help='Type of action selection used')
     parser.add_argument('--target', type=str, required=True, help='Agent\'s objective')
+    parser.add_argument('--world', type=int, required=True, help='Environment recorded')
 
     args = parser.parse_args()
 
     print('[IMAGE TO VIDEO] Loading photo stills of the movement')
     
+    video_dir = 'w' + str(args.world) + '_' + args.mode + '_' + args.target
     if str(sys.platform).find('linux') != -1:
-        image_dir = Path('/mnt/c/Users/migue/Documents/WeBots/task_legibility/controllers/camera/cam_robot')
+        image_dir = Path('/mnt/c/Users/migue/Documents/WeBots/task_legibility/controllers/camera/cam_robot') / video_dir
     else:
-        image_dir = Path('C:/Users/migue/Documents/WeBots/task_legibility/controllers/camera/cam_robot')
+        image_dir = Path('C:/Users/migue/Documents/WeBots/task_legibility/controllers/camera/cam_robot') / video_dir
     script_parent_dir = Path(__file__).parent.absolute().parent.absolute()
     videos_dir = script_parent_dir / 'data' / 'webots_videos'
     img_array = []
@@ -50,7 +52,7 @@ def main():
           
     print('[IMAGE TO VIDEO] Creating video from the images')
     if len(size) > 0:
-        out = cv2.VideoWriter(str(videos_dir / (args.mode + '_movement_' + args.target + '.mp4')),
+        out = cv2.VideoWriter(str(videos_dir / ('w' + str(args.world) + '_' + args.mode + '_movement_' + args.target + '.mp4')),
                               cv2.VideoWriter_fourcc('V','P','8','0'), 11.5, size)
 
         for i in range(len(img_array)):
