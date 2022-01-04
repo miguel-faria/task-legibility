@@ -126,7 +126,7 @@ def eval_trajectory(states: np.ndarray, actions: List[str], traj_len: int, learn
             iteraction_res['p_confidence'][goal] = learner_confidence
             iteraction_res['trajectory'][goal] = task_traj.T
 
-        print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), rep, n_reps))
+        print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), (rep+1), n_reps))
         print('Storing iteration data to file.')
         it_file = data_dir / 'results' / ('irl_evaluation_results_' + world + '_' + agent + '_' + mode + '_' + action_type + '.csv')
         results_keys = list(iteraction_res.keys())
@@ -185,31 +185,35 @@ def eval_samples(states: List[str], actions: List[str], batch_size: int, learner
         iteraction_res['trajectory'] = dict()
         
         for goal in tasks:
+            # print('Goal: ' + goal)
             pol = pols['mdp_' + str(tasks.index(goal) + 1)]
             
             samples_tmp = []
             samples_seq = []
             rng_gen = np.random.default_rng(2021)
-            for state in sample_states:
+            for i in range(batch_size):
+                state = sample_states[i]
                 state_idx = states.index(state)
                 action = rng_gen.choice(len(actions), p=pol[state_idx, :])
                 samples_seq += [state]
                 samples_tmp += [[state_idx, action]]
             samples = [np.array(samples_tmp)]
-                
+            
             print('Testing inference of cost')
             if goal not in eval_results['correct']:
                 eval_results['correct'][goal] = np.zeros(batch_size)
             if goal not in eval_results['p_confidence']:
                 eval_results['p_confidence'][goal] = np.zeros(batch_size)
             learner_count, learner_confidence = learner.learner_eval(conf, samples, batch_size, 1, tasks.index(goal))
+            print('Correct count: ' + str(learner_count))
+            print('Confidence: ' + str(learner_confidence))
             eval_results['correct'][goal] += learner_count / (n_batches * n_reps)
             eval_results['p_confidence'][goal] += learner_confidence / n_reps
             iteraction_res['correct'][goal] = learner_count
             iteraction_res['p_confidence'][goal] = learner_confidence
             iteraction_res['trajectory'][goal] = np.array(samples_seq).T
             
-        print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), rep, n_reps))
+        print('Done %d%% of repetitions. (%d/%d)' % (round((rep + 1) * 100 / n_reps, 0), (rep+1), n_reps))
         print('Storing iteration data to file.')
         it_file = data_dir / 'results' / ('irl_evaluation_results_' + world + '_' + agent + '_' + mode + '_' + action_type + '.csv')
         results_keys = list(iteraction_res.keys())
@@ -245,7 +249,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='IRL task legibility in stochastic environment argument parser')
     parser.add_argument('--agent', dest='agent', type=str, required=True, choices=['optimal', 'legible'],
-                        help='Type of agent to user, either optimal or legible')
+                        help='Type of agent to use as learner, either optimal or legible')
     parser.add_argument('--world', dest='world', type=int, required=True, help='World config ID')
     parser.add_argument('--leg_func', dest='leg_func', type=str, required=True, choices=['leg_optimal', 'leg_weight'],
                         help='Function to compute (state, action) legibility. Values accepted: \'leg_optimal\' '
@@ -354,7 +358,7 @@ def main():
         c = leg_costs
         sign = 1
     else:
-        print(colored('[ERROR] Invalid agent type, exiting program!', color='red'))
+        print(colored('[ERROR] Invalid agent learner type, exiting program!', color='red'))
         return
     learner = LearnerMDP(X_w, A_w, P_w, 0.9, c, sign, verbose)
    
