@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script src="scripts/survey.js"></script>
-    <title>Task Legibility Survey</title>
+    <title>Robot Movement Guessing Game</title>
 </head>
 
 <body onload='endSurvey()'>

@@ -908,17 +908,14 @@ class LearnerMDP(object):
 		
 	def sample_probability(self, x: int, a: int, conf: float) -> np.ndarray:
 		nR = len(self._reward_library)
-		q_values = []
 		goals_likelihood = []
 		
 		for i in range(nR):
 			q = self._q_library[i]
-			goals_likelihood += [np.exp(self._sign * conf * (q[x, a] - np.max(q))) / np.sum(np.exp(self._sign * conf * (q - np.max(q))))]
+			goals_likelihood += [np.exp(self._sign * conf * (q[x, a] - np.max(q[x, :]))) / np.sum(np.exp(self._sign * conf * (q[x, :] - np.max(q[x, :]))))]
 		
 		goals_likelihood = np.array(goals_likelihood)
-		print(goals_likelihood)
-		return goals_likelihood / goals_likelihood.sum()
-		# return goals_likelihood
+		return goals_likelihood
 	
 	def birl_inference(self, samples: np.ndarray, conf: float) -> Tuple[np.ndarray, int, float]:
 		
@@ -928,23 +925,14 @@ class LearnerMDP(object):
 		goal_prob = np.ones(n_tasks) / n_tasks
 		
 		for state, action in samples:
-			print('State, Action = ' + str(self._mdp_r[0][state]) + ',' + str(self._mdp_r[1][action]))
-			likelihood = goal_prob * self.sample_probability(state, action, conf)
-			# print('Likelihood = ' + str(likelihood))
-			goal_prob += likelihood
+			sample_prob = self.sample_probability(state, action, conf)
+			likelihood = goal_prob * sample_prob
+			goal_prob += sample_prob
 			goal_prob = goal_prob / goal_prob.sum()
-			# print(goal_prob)
 			samples_likelihood += [likelihood]
 		
-		# print(samples_likelihood)
 		r_likelihood = np.cumprod(np.array(samples_likelihood), axis=0)[-1]
-		# print('Likelihood products: ' + str(r_likelihood))
-		# max_likelihood = np.max(r_likelihood)
-		# low_magnitude = math.floor(math.log(np.min(r_likelihood), 10)) - 2
-		# p_max = np.isclose(r_likelihood, max_likelihood, atol=10 ** low_magnitude, rtol=10 ** low_magnitude).astype(int)
 		p_max = r_likelihood / r_likelihood.sum( )
-		# print(p_max)
-		# reward_idx = rng_gen.choice(len(self._reward_library), p=p_max)
 		reward_idx = rng_gen.choice(np.argwhere(p_max == np.amax(p_max)).ravel())
 		reward_conf = p_max[reward_idx]
 		

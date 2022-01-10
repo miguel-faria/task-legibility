@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Task Legibility Survey</title>
+    <title>Robot Movement Guessing Game</title>
 </head>
 <body onload='initSurvey()'>
     <?php
@@ -12,7 +12,7 @@
         $conditions = file_get_contents("data/conditions.json");
     ?>
     <div class="intro">
-        <h2>Task Legibility Survey</h2>
+        <h2>Robot Movement Guessing Game</h2>
 
         <p>Welcome! In this survey you are going to play a guessing game with a robot.</p>
 

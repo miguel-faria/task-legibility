@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Task Legibility Survey</title>
+    <title>Robot Movement Guessing Game</title>
 </head>
 
 <body onload="loadSurvey()">
@@ -92,31 +92,14 @@
             </div>
         </div>
 
-        <!--        
-        <div id="control-1" class="control">
-            <h3>Using the next image as reference, in which area was the green circle in the last video?</h3>
-            <img id='control-q1-img' src="data/world_reference.png" class="vq1">
-            <ul>
-                <button id='control-q1-1' class="button" type="button" value="top-left" onclick='getControl(this)'>Top left area</button>
-                <button id='control-q1-2' class="button" type="button" value="top-right" onclick='getControl(this)'>Top right area</button>
-                <button id='control-q1-3' class="button" type="button" value="mid-left" onclick='getControl(this)'>Middle left area</button>
-                <button id='control-q1-4' class="button" type="button" value="mid-right" onclick='getControl(this)'>Middle right area</button>
-                <button id='control-q1-5' class="button" type="button" value="bottom-left" onclick='getControl(this)'>Bottom left area</button>
-                <button id='control-q1-6' class="button" type="button" value="bottom-right" onclick='getControl(this)'>Bottom right area</button>
-            </ul>
-        </div>
-        -->
-
         <div id="control-1" class="control">
             <h3>Which were the colors of the areas in the videos you watched?</h3>
             <p>(Press submit after selecting the correct answer)</p>
             <ul>
                 <input type="radio" class="control-input" name="control-input" value="false-1"> Blue, Green, Purple, Brown, Yellow, White <br>
-                <input type="radio" class="control-input" name="control-input" value="false-2"> Blue, Green, Purple, Red, Orange, White <br>
+                <input type="radio" class="control-input" name="control-input" value="false-2"> Blue, Green, Purple, Brown, Orange, White <br>
                 <input type="radio" class="control-input" name="control-input" value="true"> Blue, Green, Pink, Red, Yellow, White <br>
                 <input type="radio" class="control-input" name="control-input" value="false-3"> Blue, Green, Pink, Brown, Orange, White <br>
-                <input type="radio" class="control-input" name="control-input" value="false-4"> Blue, Green, Purple, Brown, Orange, White <br>
-                <input type="radio" class="control-input" name="control-input" value="false-5"> Blue, Green, Pink, Red, Yellow, Grey
             </ul>
             <button id='control-continue' class="button" type="button" onclick='storeControl(this)'>Submit</button>
         </div>
