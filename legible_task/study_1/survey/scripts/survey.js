@@ -171,10 +171,10 @@ function getPrediction(objButton){
             answers['it-' + (loops_completed + 1) + '-total-time'] = video.duration;
             answers['it-' + (loops_completed + 1) + '-prediction'] = value;
             answers['it-' + (loops_completed + 1) + '-prediction-time'] = video.currentTime;
-            total_time = (video.duration / 2) - 5.0;
-            guess_time = Math.max(video.currentTime, (video.duration / 2)) - 5.0;
+            total_time = video.duration - 5.0;
+            guess_time = Math.max(video.currentTime, (video.duration / 3)) - 5.0;
             score = parseFloat(localStorage.getItem("score"));
-            score += ((value === correct_goal ? 1 : 0) * (((total_time - guess_time) / total_time) * (100 / n_loops)));
+            score += ((value === correct_goal ? 1 : 0) * Math.min(((total_time - guess_time) / (total_time - (total_time / 3))) * (100 / n_loops), 100 / n_loops));
             answers['score'] = score;
             localStorage.setItem("score", score);
         }

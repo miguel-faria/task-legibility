@@ -3,10 +3,8 @@ import sys
 import os
 import time
 import signal
-import json
 
 import numpy as np
-import multiprocessing as mp
 import timeit
 import argparse
 import yaml
@@ -23,7 +21,7 @@ from pathlib import Path
 from multiprocessing import Process
 
 SCALABILITY_WORLDS = {1: '10x10_world_2', 2: '25x25_world',  3: '40x40_world', 4: '50x50_world',
-					  5: '60x60_world', 6: '75x75_world', 7: '5x8_world'}#,  7: '80x80_world', 8: '90x90_world'}
+					  5: '60x60_world', 6: '75x75_world', 7: '5x8_world'}
 
 OBJECTS_WORLDS = {1: '25x25_world_g3', 2: '25x25_world_g4', 3: '25x25_world_g5', 4: '25x25_world_g6',
 				  5: '25x25_world_g7', 6: '25x25_world_g8', 7: '25x25_world_g9', 8: '25x25_world_g10'}

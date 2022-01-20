@@ -53,7 +53,7 @@ def main():
     print('[IMAGE TO VIDEO] Creating video from the images')
     if len(size) > 0:
         out = cv2.VideoWriter(str(videos_dir / ('w' + str(args.world) + '_' + args.mode + '_movement_' + args.target + '.mp4')),
-                              cv2.VideoWriter_fourcc('V','P','8','0'), 11.5, size)
+                              cv2.VideoWriter_fourcc('V','P','8','0'), 9.5, size)
 
         for i in range(len(img_array)):
             out.write(img_array[i])

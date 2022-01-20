@@ -4,12 +4,10 @@ from __future__ import annotations
 import numpy as np
 import time
 import math
-import re
 from abc import ABC
 from tqdm import tqdm
 from termcolor import colored
 from typing import List, Dict, Tuple
-# from mcts import MiuraMDPMCTSNode
 
 
 class Utilities(object):
@@ -1079,100 +1077,3 @@ class LearnerMDP(object):
 		if self._verbose:
 			print('Finished.')
 		return correct_count, np.array(avg_inference_conf)
-
-
-def main( ):
-	import yaml
-	from mazeworld import AutoCollectMazeWord, LimitedCollectMazeWorld, SimpleWallMazeWorld2
-	
-	def get_goal_states(states, goal, with_objs=True, goals=None):
-		if with_objs:
-			state_lst = list(states)
-			return [state_lst.index(x) for x in states if x.find(goal) != -1]
-		else:
-			state_lst = list(states)
-			for g in goals:
-				if g[2].find(goal) != -1:
-					return [state_lst.index(str(g[0]) + ' ' + str(g[1]))]
-	
-	def simulate(mdp, pol, mdp_tasks, leg_pol, x0, n_trajs, goal):
-		mdp_trajs = []
-		tasks_trajs = []
-		
-		for _ in tqdm(range(n_trajs), desc='Simulate Trajectories'):
-			traj, acts = mdp.trajectory(x0, pol)
-			traj_leg, acts_leg = mdp_tasks.trajectory(x0, leg_pol)
-			mdp_trajs += [[traj, acts]]
-			tasks_trajs += [[traj_leg, acts_leg]]
-		
-		mdp_r = mdp.trajectory_reward(mdp_trajs)
-		mdp_rl = mdp_tasks.trajectory_reward(mdp_trajs, goal)
-		task_r = mdp.trajectory_reward(tasks_trajs)
-		task_rl = mdp_tasks.trajectory_reward(tasks_trajs, goal)
-		
-		return mdp_r, mdp_rl, task_r, task_rl
-
-	WORLD_CONFIGS = {1: '8x8_world.yaml', 2: '10x10_world.yaml', 3: '8x8_world_2.yaml', 4: '10x10_world_2.yaml'}
-	world = 2
-
-	with open('../data/configs/' + WORLD_CONFIGS[world]) as file:
-		config_params = yaml.full_load(file)
-
-		n_cols = config_params['n_cols']
-		n_rows = config_params['n_rows']
-		walls = config_params['walls']
-		task_states = config_params['task_states']
-		tasks = config_params['tasks']
-	x0 = '1 1 N'
-	goal = 'T'
-	print('Initial State: ' + x0)
-
-	print('#######################################')
-	print('#####   Legible MDPs Application  #####')
-	print('#######################################')
-	print('### Generating World ###')
-	acmw = SimpleWallMazeWorld2()
-	X_w, A_w, P_w = acmw.generate_world(n_rows, n_cols, task_states, walls, 'stochastic', 0.15)
-	
-	print('### Creating MDPs ###')
-	mdps = { }
-	v_mdps_w = {}
-	q_mdps_w = {}
-	dists = []
-	print('Optimal task MDPs')
-	for i in tqdm(range(len(tasks)), desc='Optimal Task MDPs'):
-		c = acmw.generate_rewards(tasks[i], X_w, A_w)
-		mdp = MDP(X_w, A_w, P_w, c, 0.9, get_goal_states(X_w, tasks[i]), 'rewards')
-		pol, q = mdp.policy_iteration()
-		v = Utilities.v_from_q(q, pol)
-		q_mdps_w[tasks[i]] = q
-		v_mdps_w[tasks[i]] = v
-		dists += [mdp.policy_dist(pol)]
-		mdps['mdp' + str(i + 1)] = mdp
-	dists = np.array(dists)
-	print('Legible task MDP')
-	task_mdp = LegibleTaskMDP(X_w, A_w, P_w, 0.9, goal, tasks, tasks, 2.0, get_goal_states(X_w, goal), 1, 'leg_weight', q_mdps=q_mdps_w, v_mdps=v_mdps_w,
-							  dists=dists)
-	
-	print('### Computing Optimal policy ###')
-	time1 = time.time( )
-	goal_idx = tasks.index(goal)
-	opt_pol, _ = mdps['mdp' + str(goal_idx + 1)].policy_iteration()
-	print('Took %.3f seconds to compute policy' % (time.time( ) - time1))
-	
-	print('### Computing Legible policy ###')
-	time1 = time.time( )
-	leg_pol, _ = task_mdp.policy_iteration( )
-	print('Took %.3f seconds to compute policy' % (time.time( ) - time1))
-	
-	print('Getting model performance!!')
-	clock_1 = time.time( )
-	opt_mdp_r, opt_mdp_rl, leg_mdp_r, leg_mdp_rl = simulate(mdps['mdp' + str(goal_idx + 1)], opt_pol, task_mdp, leg_pol, x0, 10, goal_idx)
-	time_simulation = time.time( ) - clock_1
-	print('Simulation length = %.3f' % time_simulation)
-	print('Optimal Policy performance:\nReward: %.3f\nLegible Reward: %.3f' % (opt_mdp_r, opt_mdp_rl))
-	print('legible Policy performance:\nReward: %.3f\nLegible Reward: %.3f' % (leg_mdp_r, leg_mdp_rl))
-
-
-if __name__ == '__main__':
-	main( )
