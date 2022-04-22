@@ -7,10 +7,31 @@ import math
 from abc import ABC
 from tqdm import tqdm
 from termcolor import colored
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Callable
+from src.mdpworld import MDPWorld
 
 
 class Utilities(object):
+
+	@staticmethod
+	def state_tuple_to_str(state: tuple):
+		return ', '.join(' '.join(str(x) for x in elem) for elem in state)
+
+	@staticmethod
+	def state_str_to_tuple(state_str: str):
+		state_tuple = []
+		state_split = state_str.split(', ')
+		for elem in state_split:
+			elem_split = elem.split(' ')
+			elem_tuple = []
+			for elem_2 in elem_split:
+				try:
+					elem_tuple += [int(elem_2)]
+				except ValueError:
+					elem_tuple += [elem_2]
+			state_tuple += [tuple(elem_tuple)]
+		
+		return tuple(state_tuple)
 
 	@staticmethod
 	def q_from_pol(mdp: MDP, pol: np.ndarray, task_idx: int = None) -> np.ndarray:
@@ -32,16 +53,44 @@ class Utilities(object):
 			q[:, act, None] = c[:, act, None] + gamma * P[A[act]].dot(J)
 		
 		return q
+	
+	@staticmethod
+	def q_from_v(v: np.ndarray, mdp: MDP) -> np.ndarray:
+		
+		A = mdp.actions
+		P = mdp.transitions_prob
+		c = mdp.costs
+		gamma = mdp.gamma
+		
+		nX = len(mdp.states)
+		nA = len(A)
+		q = np.zeros((nX, nA))
+		
+		for a_idx in range(nA):
+			q[:, a_idx, None] = c[:, a_idx, None] + gamma * P[A[a_idx]].dot(v)
+		
+		return q
 
 	@staticmethod
-	def v_from_q(q: np.ndarray, pol: np.ndarray) -> np.ndarray:
-		return (q * pol).sum(axis=1)
-	
-	# @staticmethod
-	# def q_from_v(v: np.ndarray, pol: np.ndarray) -> np.ndarray:
+	def v_from_pol(mdp: MDP, pol: np.ndarray, feedback_type: str, task_idx: int = None) -> np.ndarray:
+		if feedback_type == 'costs':
+			return np.min(Utilities.q_from_pol(mdp, pol, task_idx), axis=1)[:, None]
+		elif feedback_type == 'rewards':
+			return np.max(Utilities.q_from_pol(mdp, pol, task_idx), axis=1)[:, None]
+		else:
+			return np.zeros((len(mdp.states), 1))
+
+	@staticmethod
+	def v_from_q(q: np.ndarray, feedback_type: str) -> np.ndarray:
+		if feedback_type == 'costs':
+			return np.min(q, axis=1)[:, None]
+		elif feedback_type == 'rewards':
+			return np.max(q, axis=1)[:, None]
+		else:
+			return np.zeros((q.shape[0], 1))
 	
 	@staticmethod
-	def Ppi(transitions: Dict[str, np.ndarray], actions: List[str], pol: np.ndarray) -> np.ndarray:
+	def Ppi(transitions: Dict[str, np.ndarray], actions: np.ndarray, pol: np.ndarray) -> np.ndarray:
 
 		nA = len(actions)
 		ppi = pol[:, 0, None] * transitions[actions[0]]
@@ -51,7 +100,7 @@ class Utilities(object):
 		return ppi
 
 	@staticmethod
-	def Ppi_stack(transitions: Dict[str, np.ndarray], actions: List[str], pol: np.ndarray) -> np.ndarray:
+	def Ppi_stack(transitions: Dict[str, np.ndarray], actions: np.ndarray, pol: np.ndarray) -> np.ndarray:
 		
 		nX = len(transitions[actions[0]])
 		nA = len(actions)
@@ -64,7 +113,7 @@ class Utilities(object):
 		return ppi
 
 	@staticmethod
-	def Q_func_grad(transitions: Dict[str, np.ndarray], actions: List[str], pol: np.ndarray, q_pi: np.ndarray, gamma: float) -> np.ndarray:
+	def Q_func_grad(transitions: Dict[str, np.ndarray], actions: np.ndarray, pol: np.ndarray, q_pi: np.ndarray, gamma: float) -> np.ndarray:
 		
 		nX, nA = q_pi.shape
 		q_stack = q_pi.flatten('F')
@@ -98,7 +147,7 @@ class Utilities(object):
 
 class MDP(object):
 	
-	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], c: np.ndarray, gamma: float, goal_states: List[int], feedback_type: str,
+	def __init__(self, x: np.ndarray, a: np.ndarray, p: Dict[str, np.ndarray], c: np.ndarray, gamma: float, goal_states: List[int], feedback_type: str,
 				 verbose: bool):
 		self._mdp = (x, a, p, c, gamma)
 		self._goal_states = goal_states
@@ -114,7 +163,7 @@ class MDP(object):
 		return self._mdp[0]
 	
 	@property
-	def actions(self) -> List[str]:
+	def actions(self) -> np.ndarray:
 		return self._mdp[1]
 	
 	@property
@@ -134,7 +183,7 @@ class MDP(object):
 		return self._goal_states
 	
 	@property
-	def mdp(self) -> Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float]:
+	def mdp(self) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], np.ndarray, float]:
 		return self._mdp
 	
 	@property
@@ -142,7 +191,7 @@ class MDP(object):
 		return self._verbose
 	
 	@mdp.setter
-	def mdp(self, mdp: Tuple[np.ndarray, List[str], Dict[str, np.ndarray], np.ndarray, float]):
+	def mdp(self, mdp: Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], np.ndarray, float]):
 		self._mdp = mdp
 	
 	@goals.setter
@@ -153,6 +202,32 @@ class MDP(object):
 	def verbose(self, verbose: bool):
 		self._verbose = verbose
 	
+	def update_states(self, X_new: np.ndarray):
+		
+		_, A, P, c, gamma = self._mdp
+		self._mdp = (X_new, A, P, c, gamma)
+	
+	def update_actions(self, A_new: np.ndarray):
+		X, _, P, c, gamma = self._mdp
+		self._mdp = (X, A_new, P, c, gamma)
+	
+	def update_transitions(self, P_new: Dict[str, np.ndarray]):
+		X, A, _, c, gamma = self._mdp
+		self._mdp = (X, A, P_new, c, gamma)
+	
+	def update_costs_rewards(self, c_new: np.ndarray, feedback_type: str):
+		X, A, P, _, gamma = self._mdp
+		self._mdp = (X, A, P, c_new, gamma)
+		if feedback_type.lower().find('cost') != -1 or feedback_type.lower().find('reward') != -1:
+			self._feedback_type = feedback_type
+		else:
+			print('Invalid feedback type, defaulting to use costs.')
+			self._feedback_type = 'cost'
+	
+	def update_gamma(self, gamma_new: float):
+		X, A, P, c, _ = self._mdp
+		self._mdp = (X, A, P, c, gamma_new)
+		
 	def get_possible_states(self, q: np.ndarray) -> np.ndarray:
 		nonzerostates = np.nonzero(q.sum(axis=1))[0]
 		possible_states = [np.delete(nonzerostates, np.argwhere(nonzerostates == g)) for g in self._goal_states][0]
@@ -428,7 +503,6 @@ class MDP(object):
 
 		# dists = np.zeros(len(self.states))
 		dists = np.ones(len(self.states)) * 1000
-		states = list(self.states)
 		q_pol = Utilities.q_from_pol(self, pol, task_idx)
 		possible_states = list(self.get_possible_states(q_pol))
 		for x in possible_states:
@@ -439,7 +513,7 @@ class MDP(object):
 
 class LegibleTaskMDP(MDP):
 	
-	def __init__(self, x: np.ndarray, a: List[str], p: Dict[str, np.ndarray], gamma: float, verbose: bool, task: str, task_states: List[Tuple[int, int, str]],
+	def __init__(self, x: np.ndarray, a: np.ndarray, p: Dict[str, np.ndarray], gamma: float, verbose: bool, task: str, task_states: List[Tuple[int, int, str]],
 				 tasks: List[str], beta: float, goal_states: List[int], sign: int, leg_func: str, q_mdps: Dict[str, np.ndarray], v_mdps: Dict[str, np.ndarray],
 				 dists: np.ndarray):
 		self._legible_functions = {'leg_optimal': self.optimal_legible_cost, 'leg_weight': self.legible_cost}
@@ -1077,3 +1151,325 @@ class LearnerMDP(object):
 		if self._verbose:
 			print('Finished.')
 		return correct_count, np.array(avg_inference_conf)
+
+
+class OPoLMDP(MDP):
+	
+	def __init__(self, X: np.ndarray, A: np.ndarray, P: Dict[str, np.ndarray], gamma: float, Z: List[str], O: Dict[str, np.ndarray], verbose: bool, task: str,
+				 task_states: List[Tuple[int, int, str]], tasks: List[str], beta: float, goal_states: List[int], sign: int, q_mdps: Dict[str, np.ndarray]):
+		self._task = task
+		self._tasks = tasks
+		self._Z = Z
+		self._O = O
+		self._task_states = {}
+		for task_state in task_states:
+			self._task_states[task_state[2]] = tuple([task_state[0], task_state[1]])
+		self._tasks_q = q_mdps
+		self._beta = beta
+		nX = len(X)
+		nA = len(A)
+		nT = len(tasks)
+		c = np.zeros((nT, nX, nA))
+		
+		super().__init__(X, A, P, c, gamma, goal_states, 'rewards', verbose)
+		for t in range(nT):
+			for x in range(nX):
+				for a in range(nA):
+					c[t, x, a] = self.obstructed_legible_reward(x, a, t, sign, nX, nA, P, A)
+		
+		self._mdp = (X, A, P, c, gamma)
+	
+	def update_cost_function(self, sign: int, q_mdps: Dict[str, np.ndarray]):
+		mdp = self.mdp
+		X = mdp[0]
+		A = mdp[1]
+		P = mdp[2]
+		gamma = mdp[4]
+		nX = len(X)
+		nA = len(A)
+		nT = len(self._tasks)
+		c = np.zeros((nT, nX, nA))
+		self._tasks_q = q_mdps
+		
+		for t in range(nT):
+			for x in range(nX):
+				for a in range(nA):
+					c[t, x, a] = self.obstructed_legible_reward(x, a, t, sign, nX, nA, P, A)
+		
+		self._mdp = (X, A, P, c, gamma)
+		
+	def obstructed_legible_reward(self, x_idx: int, a_idx: int, task: int, sign: int, nX: int, nA: int, P: Dict[str, np.ndarray], A: List[str]) -> float:
+		
+		leg_reward = 0.0
+		for z in range(len(self._Z)):
+			leg_reward += self.observation_goal(z, task, sign, nX, nA, P, A) * self.observation_state_action(x_idx, z, nX, P, A[a_idx])
+		
+		return leg_reward
+	
+	def observation_state_action(self, x_idx: int, z: int, nX: int, P: Dict[str, np.ndarray], a: str) -> float:
+	
+		obs_prob = 0.0
+		for x1 in range(nX):
+			obs_prob += self._O[a][x1, z] * P[a][x_idx, x1]
+		
+		return obs_prob
+	
+	def observation_goal(self, z: int, t: int, sign: int, nX: int, nA: int, P: Dict[str, np.ndarray], A: List[str]) -> float:
+	
+		obs_prob = 0.0
+		for x in range(nX):
+			for a in range(nA):
+				obs_prob += self.observation_state_action(x, z, nX, P, A[a]) * self.task_probability(x, a, t, sign)
+			
+		return obs_prob
+	
+	def task_probability(self, x: int, a: int, task: int, sign: int) -> float:
+		
+		task_cost = np.exp(sign * self._beta * self._tasks_q[self._tasks[task]][x, a])
+		tasks_sum = task_cost
+		for t in self._tasks:
+			if t != self._tasks[task]:
+				tasks_sum += np.exp(sign * self._beta * self._tasks_q[t][x, a])
+		
+		return task_cost / tasks_sum
+		
+
+class TeamMDP(MDP):
+	
+	def __init__(self, team_info: Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray], np.ndarray], robot_pols: Dict[str, np.ndarray], gamma: float,
+				 feedback_type: str, verbose: bool, team_world: MDPWorld, n_robots: int, task: str, obj_states: List[Tuple[int, int, str]],
+				 goal_states: List[int], fail_chance: float, robot_states: np.ndarray, robot_actions: np.ndarray, robot_transitions: Dict[str, np.ndarray]):
+		
+		self._task = task
+		self._seq_len = len(task)
+		self._fail_chance = fail_chance
+		self._obj_states = {}
+		self._robot_pols = {}
+		for task_state in obj_states:
+			self._obj_states[task_state[2]] = tuple([task_state[0], task_state[1]])
+			self._robot_pols[task_state[2]] = robot_pols[task_state[2]]
+		self._team_world = team_world
+		self._robot_states = robot_states
+		self._robot_actions = robot_actions
+		self._robot_transitions = robot_transitions
+		self._n_robots = n_robots
+		
+		x_t, a_t, P_t, c_t = team_info
+		super().__init__(x_t, a_t, P_t, c_t, gamma, goal_states, feedback_type, verbose)
+	
+	def team_decision(self, team_x0: str, team_pol: np.ndarray, rng_gen: np.random.Generator, robots_x0: List[str],
+					  max_iterations: int) -> (Tuple[List[str], List[str]], Tuple[List[List[str]], List[List[str]]]):
+		
+		team_states = []
+		team_actions = []
+		robots_states = []
+		robots_actions = []
+		robots_controls = ['F'] * self._n_robots
+		X_team, A_team, P_team, _, _ = self._mdp
+		world_team_state = Utilities.state_str_to_tuple(team_x0)
+		seq_state = world_team_state[-1][0]
+		goal_seq = Utilities.state_str_to_tuple(X_team[self._goal_states[0]])[-1][0]
+		robot_states_lst = list(self._robot_states)
+		team_states_lst = list(X_team)
+		
+		nA_team = len(A_team)
+		
+		for i in range(self._n_robots):
+			robots_states += [[robots_x0[i]]]
+			robots_actions += [[]]
+	
+		team_states += [team_x0]
+		team_x = team_states_lst.index(team_x0)
+		finish = False
+		i = 0
+		
+		while not finish:
+			
+			team_action = rng_gen.choice(nA_team, p=team_pol[team_x, :])
+			team_actions += [A_team[team_action]]
+			action_detailed = self._team_world.action_detailed(A_team[team_action])
+			action_results = rng_gen.choice([0, 1], p=[self._fail_chance, 1 - self._fail_chance])
+			
+			if action_results > 0:
+				if action_detailed[0] == 'U':
+					robots_controls[action_detailed[2] - 1] = ''.join(action_detailed[1])
+				
+				seq_state_tmp = seq_state
+				for i in range(self._n_robots):
+					if robots_controls[i].find('F') == -1:
+						robot_target = robots_controls[i]
+						if seq_state_tmp.find(robot_target) == -1:
+							if goal_seq[:len(seq_state_tmp)+1] == (seq_state_tmp + robot_target):
+								x_r = robots_states[i][-1] + ', 1'
+							else:
+								x_r = robots_states[i][-1] + ', 0'
+							a_r = rng_gen.choice(self._robot_actions, p=self._robot_pols[robot_target][robot_states_lst.index(x_r), :])
+							x_r_1 = rng_gen.choice(self._robot_states, p=self._robot_transitions[a_r][robot_states_lst.index(x_r), :])
+							if x_r_1.find(robot_target) != -1:
+								if len(seq_state_tmp) < self._seq_len:
+									seq_state_tmp += robot_target
+								robots_controls[i] = 'F'
+							
+							robots_actions[i] += [a_r]
+							robots_states[i] += [Utilities.state_tuple_to_str(Utilities.state_str_to_tuple(x_r_1)[:-1])]
+						
+						else:
+							robots_controls[i] = 'F'
+							robots_actions[i] += ['N']
+							robots_states[i] += [robots_states[i][-1]]
+						
+					else:
+						robots_actions[i] += ['N']
+						robots_states[i] += [robots_states[i][-1]]
+				
+				seq_state = seq_state_tmp
+				team_x = team_states_lst.index(Utilities.state_tuple_to_str(tuple([(str(x[0]), ) for x in robots_controls]) + ((seq_state, ), )))
+			
+			team_states += [X_team[team_x]]
+			finish = (team_x in self._goal_states or i >= max_iterations)
+			if finish:
+				team_actions += [A_team[rng_gen.choice(nA_team, p=team_pol[team_x, :])]]
+		
+		return (team_states, team_actions), (robots_states, robots_actions)
+	
+	
+class TeamLegibleMDP(MDP):
+	
+	def __init__(self, team_info: Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray]], gamma: float, verbose: bool, task: str, tasks: List[str],
+				 obj_states: List[Tuple[int, int, str]], beta: float, goal_states: List[int], sign: int, q_mdps: Dict[str, np.ndarray], team_world: MDPWorld,
+				 n_robots: int, robot_pols: Dict[str, np.ndarray], fail_chance: float, robot_states: np.ndarray, robot_actions: np.ndarray,
+				 robot_transitions: Dict[str, np.ndarray]):
+		
+		self._task = task
+		self._tasks = tasks
+		self._beta = beta
+		self._seq_len = len(task)
+		self._fail_chance = fail_chance
+		self._obj_states = {}
+		self._robot_pols = {}
+		for task_state in obj_states:
+			self._obj_states[task_state[2]] = tuple([task_state[0], task_state[1]])
+			self._robot_pols[task_state[2]] = robot_pols[task_state[2]]
+		self._tasks_q = q_mdps
+		self._team_world = team_world
+		self._robot_states = robot_states
+		self._robot_actions = robot_actions
+		self._robot_transitions = robot_transitions
+		self._n_robots = n_robots
+		
+		x_t, a_t, p_t = team_info
+		nX = len(x_t)
+		nA = len(a_t)
+		nT = len(tasks)
+		c = np.zeros((nT, nX, nA))
+		
+		super().__init__(x_t, a_t, p_t, c, gamma, goal_states, 'rewards', verbose)
+		for t in range(nT):
+			for i in range(nX):
+				for j in range(nA):
+					c[t, i, j] = self.legible_reward(i, j, t, sign)
+		
+		self._mdp = (x_t, a_t, p_t, c, gamma)
+	
+	def update_cost_function(self, sign: int, q_mdps: Dict[str, np.ndarray]):
+		mdp = self.mdp
+		X = mdp[0]
+		A = mdp[1]
+		P = mdp[2]
+		gamma = mdp[4]
+		nX = len(X)
+		nA = len(A)
+		nT = len(self._tasks)
+		c = np.zeros((nT, nX, nA))
+		self._tasks_q = q_mdps
+		
+		for t in range(nT):
+			for x in range(nX):
+				for a in range(nA):
+					c[t, x, a] = self.legible_reward(x, a, t, sign, nX, nA, P, A)
+		
+		self._mdp = (X, A, P, c, gamma)
+		
+	def legible_reward(self, x_idx: int, a_idx: int, task: int, sign: int) -> float:
+		
+		task_cost = np.exp(sign * self._beta * self._tasks_q[self._tasks[task]][x_idx, a_idx])
+		tasks_sum = task_cost
+		for t in self._tasks:
+			if t != self._tasks[task]:
+				tasks_sum += np.exp(sign * self._beta * self._tasks_q[t][x_idx, a_idx])
+		
+		return task_cost / tasks_sum
+	
+	def team_decision(self, team_x0: str, team_pol: np.ndarray, rng_gen: np.random.Generator, robots_x0: List[str],
+					  max_iterations: int) -> (Tuple[List[str], List[str]], Tuple[List[List[str]], List[List[str]]]):
+		team_states = []
+		team_actions = []
+		robots_states = []
+		robots_actions = []
+		robots_controls = ['F'] * self._n_robots
+		X_team, A_team, P_team, _, _ = self._mdp
+		world_team_state = Utilities.state_str_to_tuple(team_x0)
+		seq_state = world_team_state[-1][0]
+		goal_seq = Utilities.state_str_to_tuple(X_team[self._goal_states[0]])[-1][0]
+		robot_states_lst = list(self._robot_states)
+		team_states_lst = list(X_team)
+		
+		nA_team = len(A_team)
+		
+		for i in range(self._n_robots):
+			robots_states += [[robots_x0[i]]]
+			robots_actions += [[]]
+		
+		team_states += [team_x0]
+		team_x = team_states_lst.index(team_x0)
+		finish = False
+		i = 0
+		
+		while not finish:
+			team_action = rng_gen.choice(nA_team, p=team_pol[team_x, :])
+			team_actions += [A_team[team_action]]
+			action_detailed = self._team_world.action_detailed(A_team[team_action])
+			action_results = rng_gen.choice([0, 1], p=[self._fail_chance, 1 - self._fail_chance])
+			
+			if action_results > 0:
+				if action_detailed[0] == 'U':
+					robots_controls[action_detailed[2] - 1] = ''.join(action_detailed[1])
+				
+				seq_state_tmp = seq_state
+				for i in range(self._n_robots):
+					if robots_controls[i].find('F') == -1:
+						robot_target = robots_controls[i]
+						if seq_state_tmp.find(robot_target) == -1:
+							if goal_seq[:len(seq_state_tmp) + 1] == (seq_state_tmp + robot_target):
+								x_r = robots_states[i][-1] + ', 1'
+							else:
+								x_r = robots_states[i][-1] + ', 0'
+							a_r = rng_gen.choice(self._robot_actions, p=self._robot_pols[robot_target][robot_states_lst.index(x_r), :])
+							x_r_1 = rng_gen.choice(self._robot_states, p=self._robot_transitions[a_r][robot_states_lst.index(x_r), :])
+							if x_r_1.find(robot_target) != -1:
+								if len(seq_state_tmp) < self._seq_len:
+									seq_state_tmp += robot_target
+								robots_controls[i] = 'F'
+							
+							robots_actions[i] += [a_r]
+							robots_states[i] += [Utilities.state_tuple_to_str(Utilities.state_str_to_tuple(x_r_1)[:-1])]
+					
+						else:
+							robots_controls[i] = 'F'
+							robots_actions[i] += ['N']
+							robots_states[i] += [robots_states[i][-1]]
+					
+					else:
+						robots_actions[i] += ['N']
+						robots_states[i] += [robots_states[i][-1]]
+				
+				seq_state = seq_state_tmp
+				team_x = team_states_lst.index(Utilities.state_tuple_to_str(tuple([(str(x[0]),) for x in robots_controls]) + ((seq_state,),)))
+			
+			team_states += [X_team[team_x]]
+			finish = (team_x in self._goal_states or i >= max_iterations)
+			if finish:
+				team_actions += [A_team[rng_gen.choice(nA_team, p=team_pol[team_x, :])]]
+		
+		return (team_states, team_actions), (robots_states, robots_actions)
+	

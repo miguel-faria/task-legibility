@@ -1,28 +1,19 @@
 #! /usr/bin/env python
+import itertools
 
 import numpy as np
 import re
 from termcolor import colored
 from abc import ABC
 from itertools import combinations, permutations
+from typing import List, Tuple, Dict
+from src.mdpworld import MDPWorld
 
 
 #############################
 #### Vanilla Maze Worlds ####
 #############################
-class MazeWorld(ABC):
-
-    def generate_states(self, n_rows, n_cols, obj_states):
-        pass
-
-    def generate_actions(self):
-        pass
-
-    def generate_stochastic_probabilities(self, states, actions, obj_states, max_rows, max_cols, fail_chance):
-        pass
-
-    def generate_probabilities(self, states, actions, obj_states, max_rows, max_cols):
-        pass
+class MazeWorld(MDPWorld):
 
     def generate_rewards(self, goal, states, actions):
 
@@ -49,9 +40,6 @@ class MazeWorld(ABC):
                 c[list(states).index(state), :] = 0.0
 
         return c
-
-    def generate_costs_varied(self, goal, states, actions, probabilities):
-        pass
 
     def generate_world(self, n_rows, n_cols, obj_states, prob_type, fail_chance=0.0):
         states = self.generate_states(n_rows, n_cols, obj_states)
@@ -620,7 +608,7 @@ class LimitedCollectMazeWorld(MazeWorld):
 ################################
 #### Maze Worlds with Walls ####
 ################################
-class WallMazeWorld(ABC):
+class WallMazeWorld(MDPWorld):
 
     def wall_exists(self, state, action, walls):
 
@@ -655,18 +643,8 @@ class WallMazeWorld(ABC):
 
         return False
 
-    def generate_states(self, n_rows, n_cols, obj_states, max_grab_objs=3):
-        pass
-
     def generate_actions(self):
         return np.array(['U', 'D', 'L', 'R', 'N'])
-
-    def generate_stochastic_probabilities(self, states, actions, obj_states, max_rows, max_cols, walls,
-                                          fail_chance, max_grab_objs=3):
-        pass
-
-    def generate_probabilities(self, states, actions, obj_states, max_rows, max_cols, walls, max_grab_objs=3):
-        pass
 
     def generate_rewards(self, goal, states, actions):
 
@@ -694,10 +672,8 @@ class WallMazeWorld(ABC):
 
         return c
 
-    def generate_costs_varied(self, goal, states, actions, probabilities):
-        pass
-
-    def generate_world(self, n_rows, n_cols, obj_states, walls, prob_type, fail_chance=0.0, max_grab_objs=10):
+    def generate_world(self, n_rows: int = 10, n_cols: int = 10, obj_states: List[Tuple[int, int, str]] = None, fail_chance: float = 0.0,
+                       prob_type: str = 'stoc', max_grab_objs: int = 10, walls: List = None):
         states = self.generate_states(n_rows, n_cols, obj_states, max_grab_objs)
         actions = self.generate_actions()
         if prob_type.lower().find('stoc') != -1:
@@ -2281,4 +2257,687 @@ class SimpleWallMazeWorld2(object):
             probabilities = self.generate_probabilities(states, actions, n_rows, n_cols, walls)
 
         return states, actions, probabilities
+
+
+###############################################
+#### Multiple Robot Maze Worlds with Walls ####
+###############################################
+class MultipleRobotMazeWorld(MDPWorld):
+    
+    def __init__(self, n_rows: int, n_cols: int, objs: List[str], obj_states: List[Tuple], walls: List[Tuple],
+                 fail_chance: float = 0.0, n_robots: int = 2):
+        
+        self._n_rows = n_rows
+        self._n_cols = n_cols
+        self._objs = objs
+        self._obj_states = obj_states
+        self._walls = walls
+        self._fail_chance = fail_chance
+        self._n_robots = n_robots
+        
+        self._states = []
+        self._actions = []
+    
+    @staticmethod
+    def get_state_str(state_tuple: Tuple) -> str:
+        return ', '.join(' '.join(str(x) for x in elem) for elem in state_tuple)
+    
+    @staticmethod
+    def get_state_tuple(state_str: str) -> Tuple:
+        state = []
+        state_split = state_str.split(', ')
+        for elem in state_split:
+            try:
+                state += [tuple(map(int, elem.split(' ')))]
+            except ValueError:
+                state += [tuple(elem.split(' '))]
+        
+        return tuple(state)
+    
+    @staticmethod
+    def get_action_tuple(action_str: str) -> Tuple[str]:
+        return tuple(action_str.split(' '))
+    
+    def wall_exists(self, state: Tuple[int, int], action: str) -> bool:
+
+        state_row = state[0]
+        state_col = state[1]
+        
+        if action == 'U':
+            up_move = (min(self._n_rows, state_row + 1), state_col)
+            if up_move in self._walls:
+                return True
+
+        elif action == 'D':
+            down_move = (max(0, state_row - 1), state_col)
+            if down_move in self._walls:
+                return True
+
+        elif action == 'L':
+            left_move = (state_row, max(0, state_col - 1))
+            if left_move in self._walls:
+                return True
+
+        elif action == 'R':
+            right_move = (state_row, min(self._n_cols, state_col + 1))
+            if right_move in self._walls:
+                return True
+        
+        else:
+            return False
+            
+        return False
+
+    def generate_states(self) -> np.ndarray:
+
+        states = []
+        locs = []
+        for i in range(self._n_rows):
+            for j in range(self._n_cols):
+                curr_loc = (i + 1, j + 1)
+                if curr_loc not in self._walls:
+                    locs += [' '.join(str(x) for x in curr_loc)]
+        
+        for loc_comb in itertools.product(locs, repeat=self._n_robots):
+            add = True
+            for i in range(self._n_robots):
+                for j in range(i+1, self._n_robots):
+                    if loc_comb[i] == loc_comb[j]:
+                        add = False
+            if add:
+                # objs_comb = itertools.product(objs, repeat=n_robots)
+                # for obj_comb in objs_comb:
+                #     states += [loc_comb + (obj_comb, )]
+                states += [', '.join(loc_comb)]
+
+        return np.array(states, dtype=tuple)
+
+    def generate_actions(self) -> np.ndarray:
+        possible_actions = ['U', 'D', 'L', 'R', 'N/P']
+        actions = []
+        for acts_comb in itertools.product(possible_actions, repeat=self._n_robots):
+            actions += [' '.join(acts_comb)]
+        return np.array(actions, dtype=tuple)
+
+    def generate_stochastic_probabilities(self, states: np.ndarray, actions: np.ndarray) -> Dict[str, np.ndarray]:
+
+        nX = len(states)
+        state_lst = list(states)
+        # print(state_lst)
+
+        # objs_loc = []
+        # objs_list = []
+        # for x, y, o in objs:
+        #     objs_loc += [(x, y)]
+        #     objs_list += [o]
+
+        P = {}
+
+        for act in actions:
+            act_tuple = MultipleRobotMazeWorld.get_action_tuple(act)
+            p = np.zeros((nX, nX))
+            for state in states:
+                state_tuple = MultipleRobotMazeWorld.get_state_tuple(state)
+                state_idx = state_lst.index(state)
+                nxt_state_tmp = ()
+                # state_obj = state[-1]
+                # nxt_state_obj = ()
+                for i in range(self._n_robots):
+                    curr_rob_loc = state_tuple[i]
+                    # curr_rob_obj = state_obj[i]
+                    if act_tuple[i] == 'U':
+                        # nxt_state_obj += (curr_rob_obj,)
+                        
+                        nxt_loc = (min(self._n_rows, curr_rob_loc[0] + 1), curr_rob_loc[1])
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc, )
+                        else:
+                            nxt_state_tmp += (nxt_loc, )
+    
+                    elif act_tuple[i] == 'D':
+                        # nxt_state_obj += (curr_rob_obj,)
+                        
+                        nxt_loc = (max(1, curr_rob_loc[0] - 1), curr_rob_loc[1])
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+        
+                    elif act_tuple[i] == 'L':
+                        # nxt_state_obj += (curr_rob_obj,)
+
+                        nxt_loc = (curr_rob_loc[0], max(1, curr_rob_loc[1] - 1))
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+        
+                    elif act_tuple[i] == 'R':
+                        # nxt_state_obj += (curr_rob_obj,)
+
+                        nxt_loc = (curr_rob_loc[0], min(self._n_cols, curr_rob_loc[1] + 1))
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+        
+                    elif act_tuple[i] == 'N/P':
+                        # if curr_rob_loc in objs_loc:
+                        #     nxt_state_obj += (objs_list[objs_loc.index(curr_rob_loc)])
+                        
+                        nxt_state_tmp += (state_tuple[i], )
+        
+                    else:
+                        print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                        continue
+                
+                # nxt_state += (nxt_state_obj, )
+                can_act = np.ones(self._n_robots)
+                for i in range(self._n_robots):
+                    for j in range(i + 1, self._n_robots):
+                        if nxt_state_tmp[i] == nxt_state_tmp[j]:
+                            can_act[i] = 0
+                            can_act[j] = 0
+                nxt_state = ()
+                for i in range(self._n_robots):
+                    if can_act[i] > 0:
+                        nxt_state += (nxt_state_tmp[i], )
+                    else:
+                        nxt_state += (state_tuple[i], )
+                nxt_idx = state_lst.index(MultipleRobotMazeWorld.get_state_str(nxt_state))
+                p[state_idx][nxt_idx] += (1.0 - self._fail_chance)
+                p[state_idx][state_idx] += self._fail_chance
+
+            P[act] = p
+
+        return P
+
+    def generate_condensed_probabilities(self, states: np.ndarray, actions: np.ndarray) -> Dict[str, np.ndarray]:
+        
+        state_lst = list(states)
+        P = {}
+        
+        for act in actions:
+            
+            act_tuple = MultipleRobotMazeWorld.get_action_tuple(act)
+            p = []
+            for state in states:
+                state_tuple = MultipleRobotMazeWorld.get_state_tuple(state)
+                state_idx = state_lst.index(state)
+                nxt_state_tmp = ()
+                # state_obj = state[-1]
+                # nxt_state_obj = ()
+                for i in range(self._n_robots):
+                    curr_rob_loc = state_tuple[i]
+                    # curr_rob_obj = state_obj[i]
+                    if act_tuple[i] == 'U':
+                        # nxt_state_obj += (curr_rob_obj,)
+            
+                        nxt_loc = (min(self._n_rows, curr_rob_loc[0] + 1), curr_rob_loc[1])
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+        
+                    elif act_tuple[i] == 'D':
+                        # nxt_state_obj += (curr_rob_obj,)
+            
+                        nxt_loc = (max(1, curr_rob_loc[0] - 1), curr_rob_loc[1])
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+        
+                    elif act_tuple[i] == 'L':
+                        # nxt_state_obj += (curr_rob_obj,)
+            
+                        nxt_loc = (curr_rob_loc[0], max(1, curr_rob_loc[1] - 1))
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+        
+                    elif act_tuple[i] == 'R':
+                        # nxt_state_obj += (curr_rob_obj,)
+            
+                        nxt_loc = (curr_rob_loc[0], min(self._n_cols, curr_rob_loc[1] + 1))
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+        
+                    elif act_tuple[i] == 'N/P':
+                        # if curr_rob_loc in objs_loc:
+                        #     nxt_state_obj += (objs_list[objs_loc.index(curr_rob_loc)])
+            
+                        nxt_state_tmp += (state_tuple[i],)
+        
+                    else:
+                        print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                        continue
+    
+                # nxt_state += (nxt_state_obj, )
+                can_act = np.ones(self._n_robots)
+                for i in range(self._n_robots):
+                    for j in range(i + 1, self._n_robots):
+                        if nxt_state_tmp[i] == nxt_state_tmp[j]:
+                            can_act[i] = 0
+                            can_act[j] = 0
+                nxt_state = ()
+                for i in range(self._n_robots):
+                    if can_act[i] > 0:
+                        nxt_state += (nxt_state_tmp[i],)
+                    else:
+                        nxt_state += (state_tuple[i],)
+                nxt_idx = state_lst.index(MultipleRobotMazeWorld.get_state_str(nxt_state))
+                p.append([(nxt_idx, 1 - self._fail_chance), (state_idx, self._fail_chance)])
+        
+            P[act] = np.array(p)
+            
+        return P
+
+    def get_transition(self, state_str: str, action_str: str) -> np.ndarray:
+    
+        state_tuple = MultipleRobotMazeWorld.get_state_tuple(state_str)
+        act_tuple = MultipleRobotMazeWorld.get_action_tuple(action_str)
+        nX = len(self._states)
+        state_lst = list(self._states)
+        p = np.zeros(nX)
+        nxt_state_tmp = ()
+        state_idx = state_lst.index(state_str)
+
+        for i in range(self._n_robots):
+            curr_rob_loc = state_tuple[i]
+            # curr_rob_obj = state_obj[i]
+            if act_tuple[i] == 'U':
+                # nxt_state_obj += (curr_rob_obj,)
+        
+                nxt_loc = (min(self._n_rows, curr_rob_loc[0] + 1), curr_rob_loc[1])
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+    
+            elif act_tuple[i] == 'D':
+                # nxt_state_obj += (curr_rob_obj,)
+        
+                nxt_loc = (max(1, curr_rob_loc[0] - 1), curr_rob_loc[1])
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+    
+            elif act_tuple[i] == 'L':
+                # nxt_state_obj += (curr_rob_obj,)
+        
+                nxt_loc = (curr_rob_loc[0], max(1, curr_rob_loc[1] - 1))
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+    
+            elif act_tuple[i] == 'R':
+                # nxt_state_obj += (curr_rob_obj,)
+        
+                nxt_loc = (curr_rob_loc[0], min(self._n_cols, curr_rob_loc[1] + 1))
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+    
+            elif act_tuple[i] == 'N/P':
+                # if curr_rob_loc in objs_loc:
+                #     nxt_state_obj += (objs_list[objs_loc.index(curr_rob_loc)])
+        
+                nxt_state_tmp += (state_tuple[i],)
+    
+            else:
+                print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                continue
+
+        can_act = np.ones(self._n_robots)
+        for i in range(self._n_robots):
+            for j in range(i + 1, self._n_robots):
+                if nxt_state_tmp[i] == nxt_state_tmp[j]:
+                    can_act[i] = 0
+                    can_act[j] = 0
+        nxt_state = ()
+        for i in range(self._n_robots):
+            if can_act[i] > 0:
+                nxt_state += (nxt_state_tmp[i],)
+            else:
+                nxt_state += (state_tuple[i],)
+        nxt_idx = state_lst.index(MultipleRobotMazeWorld.get_state_str(nxt_state))
+        p[nxt_idx] += (1.0 - self._fail_chance)
+        p[state_idx] += self._fail_chance
+        
+        return p
+    
+    def generate_rewards(self, goal_states: List[int]) -> np.ndarray:
+
+        nX = len(self._states)
+        nA = len(self._actions)
+
+        c = np.zeros((nX, nA))
+        for state in goal_states:
+            c[state, :] = 1.0
+
+        return c
+
+    def generate_costs(self, goal_states: List[int]) -> np.ndarray:
+
+        nX = len(self._states)
+        nA = len(self._actions)
+
+        c = np.ones((nX, nA))
+        for state in goal_states:
+            c[state, :] = 0.0
+
+        return c
+
+    def generate_world(self) -> Tuple[np.ndarray, np.ndarray, Dict[str, np.ndarray]]:
+
+        print('### Generating Maze World for Multiple Robots ###')
+        print('Generating States')
+        states = self.generate_states()
+        print('Generating Actions')
+        actions = self.generate_actions()
+        print('Generating Transitions')
+        # probabilities = self.generate_stochastic_probabilities(states, actions)
+        probabilities = self.generate_condensed_probabilities(states, actions)
+
+        self._states = states
+        self._actions = actions
+
+        print('World Created')
+        return states, actions, probabilities
+
+
+class TrackedMultipleRobotMazeWorld(MultipleRobotMazeWorld):
+    
+    def generate_states(self) -> np.ndarray:
+        states = []
+        locs = []
+        objs = ['N']
+        for obj_state in self._obj_states:
+            objs += [obj_state[2]]
+        for i in range(self._n_rows):
+            for j in range(self._n_cols):
+                curr_loc = (i + 1, j + 1)
+                if curr_loc not in self._walls:
+                    locs += [' '.join(str(x) for x in curr_loc)]
+        
+        for loc_comb in itertools.product(locs, repeat=self._n_robots):
+            add = True
+            for i in range(self._n_robots):
+                for j in range(i + 1, self._n_robots):
+                    if loc_comb[i] == loc_comb[j]:
+                        add = False
+            if add:
+                objs_comb = itertools.product(objs, repeat=self._n_robots)
+                for comb in objs_comb:
+                    states += [', '.join(loc_comb + (' '.join(comb), ))]
+        
+        return np.array(states, dtype=tuple)
+
+    def generate_stochastic_probabilities(self, states: np.ndarray, actions: np.ndarray) -> Dict[str, np.ndarray]:
+        nX = len(states)
+        state_lst = list(states)
+        # print(state_lst)
+    
+        # objs_loc = []
+        # objs_list = []
+        # for x, y, o in objs:
+        #     objs_loc += [(x, y)]
+        #     objs_list += [o]
+    
+        P = {}
+    
+        for act in actions:
+            act_tuple = MultipleRobotMazeWorld.get_action_tuple(act)
+            p = np.zeros((nX, nX))
+            for state in states:
+                state_tuple = MultipleRobotMazeWorld.get_state_tuple(state)
+                state_idx = state_lst.index(state)
+                nxt_state_tmp = ()
+                # state_obj = state[-1]
+                # nxt_state_obj = ()
+                for i in range(self._n_robots):
+                    curr_rob_loc = state_tuple[i]
+                    # curr_rob_obj = state_obj[i]
+                    if act_tuple[i] == 'U':
+                        # nxt_state_obj += (curr_rob_obj,)
+                    
+                        nxt_loc = (min(self._n_rows, curr_rob_loc[0] + 1), curr_rob_loc[1])
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'D':
+                        # nxt_state_obj += (curr_rob_obj,)
+                    
+                        nxt_loc = (max(1, curr_rob_loc[0] - 1), curr_rob_loc[1])
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'L':
+                        # nxt_state_obj += (curr_rob_obj,)
+                    
+                        nxt_loc = (curr_rob_loc[0], max(1, curr_rob_loc[1] - 1))
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'R':
+                        # nxt_state_obj += (curr_rob_obj,)
+                    
+                        nxt_loc = (curr_rob_loc[0], min(self._n_cols, curr_rob_loc[1] + 1))
+                        if self.wall_exists(nxt_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'N/P':
+                        # if curr_rob_loc in objs_loc:
+                        #     nxt_state_obj += (objs_list[objs_loc.index(curr_rob_loc)])
+                    
+                        nxt_state_tmp += (state_tuple[i],)
+                
+                    else:
+                        print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                        continue
+            
+                # nxt_state += (nxt_state_obj, )
+                can_act = np.ones(self._n_robots)
+                for i in range(self._n_robots):
+                    for j in range(i + 1, self._n_robots):
+                        if nxt_state_tmp[i] == nxt_state_tmp[j]:
+                            can_act[i] = 0
+                            can_act[j] = 0
+                nxt_state = ()
+                for i in range(self._n_robots):
+                    if can_act[i] > 0:
+                        nxt_state += (nxt_state_tmp[i],)
+                    else:
+                        nxt_state += (state_tuple[i],)
+                nxt_idx = state_lst.index(MultipleRobotMazeWorld.get_state_str(nxt_state))
+                p[state_idx][nxt_idx] += (1.0 - self._fail_chance)
+                p[state_idx][state_idx] += self._fail_chance
+        
+            P[act] = p
+    
+        return P
+
+    def generate_condensed_probabilities(self, states: np.ndarray, actions: np.ndarray) -> Dict[str, np.ndarray]:
+        
+        state_lst = list(states)
+        P = {}
+        objs_lst = []
+        objs_loc = []
+        for obj in self._obj_states:
+            objs_loc += [(obj[0], obj[1])]
+            objs_lst += [obj[2]]
+    
+        for act in actions:
+            act_tuple = MultipleRobotMazeWorld.get_action_tuple(act)
+            p = []
+            for state in states:
+                state_tuple = MultipleRobotMazeWorld.get_state_tuple(state)
+                state_idx = state_lst.index(state)
+                nxt_state_tmp = ()
+                state_obj = state_tuple[-1]
+                nxt_state_obj_tmp = ()
+                for i in range(self._n_robots):
+                    curr_rob_loc = state_tuple[i]
+                    curr_rob_obj = state_obj[i]
+                    if act_tuple[i] == 'U':
+                        nxt_state_obj_tmp += (curr_rob_obj,)
+                    
+                        nxt_loc = (min(self._n_rows, curr_rob_loc[0] + 1), curr_rob_loc[1])
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'D':
+                        nxt_state_obj_tmp += (curr_rob_obj,)
+                    
+                        nxt_loc = (max(1, curr_rob_loc[0] - 1), curr_rob_loc[1])
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'L':
+                        nxt_state_obj_tmp += (curr_rob_obj,)
+                    
+                        nxt_loc = (curr_rob_loc[0], max(1, curr_rob_loc[1] - 1))
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'R':
+                        nxt_state_obj_tmp += (curr_rob_obj,)
+                    
+                        nxt_loc = (curr_rob_loc[0], min(self._n_cols, curr_rob_loc[1] + 1))
+                        if self.wall_exists(curr_rob_loc, act_tuple[i]):
+                            nxt_state_tmp += (curr_rob_loc,)
+                        else:
+                            nxt_state_tmp += (nxt_loc,)
+                
+                    elif act_tuple[i] == 'N/P':
+                        if curr_rob_loc in objs_loc:
+                            nxt_state_obj_tmp += (objs_lst[objs_loc.index(curr_rob_loc)], )
+                        else:
+                            nxt_state_obj_tmp += (curr_rob_obj, )
+
+                        nxt_state_tmp += (state_tuple[i],)
+                
+                    else:
+                        print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                        continue
+            
+                can_act = np.ones(self._n_robots)
+                for i in range(self._n_robots):
+                    for j in range(i + 1, self._n_robots):
+                        if nxt_state_tmp[i] == nxt_state_tmp[j]:
+                            can_act[i] = 0
+                            can_act[j] = 0
+                nxt_state = ()
+                nxt_state_obj = ()
+                for i in range(self._n_robots):
+                    if can_act[i] > 0:
+                        nxt_state += (nxt_state_tmp[i],)
+                        nxt_state_obj += (nxt_state_obj_tmp[i],)
+                    else:
+                        nxt_state += (state_tuple[i],)
+                        nxt_state_obj += (state_obj[i],)
+                nxt_state += (nxt_state_obj, )
+                nxt_idx = state_lst.index(MultipleRobotMazeWorld.get_state_str(nxt_state))
+                p.append([(nxt_idx, 1 - self._fail_chance), (state_idx, self._fail_chance)])
+        
+            P[act] = np.array(p)
+    
+        return P
+
+    def get_transition(self, state_str: str, action_str: str) -> np.ndarray:
+        state_tuple = MultipleRobotMazeWorld.get_state_tuple(state_str)
+        act_tuple = MultipleRobotMazeWorld.get_action_tuple(action_str)
+        nX = len(self._states)
+        state_lst = list(self._states)
+        p = np.zeros(nX)
+        nxt_state_tmp = ()
+        state_idx = state_lst.index(state_str)
+    
+        for i in range(self._n_robots):
+            curr_rob_loc = state_tuple[i]
+            # curr_rob_obj = state_obj[i]
+            if act_tuple[i] == 'U':
+                # nxt_state_obj += (curr_rob_obj,)
+            
+                nxt_loc = (min(self._n_rows, curr_rob_loc[0] + 1), curr_rob_loc[1])
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+        
+            elif act_tuple[i] == 'D':
+                # nxt_state_obj += (curr_rob_obj,)
+            
+                nxt_loc = (max(1, curr_rob_loc[0] - 1), curr_rob_loc[1])
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+        
+            elif act_tuple[i] == 'L':
+                # nxt_state_obj += (curr_rob_obj,)
+            
+                nxt_loc = (curr_rob_loc[0], max(1, curr_rob_loc[1] - 1))
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+        
+            elif act_tuple[i] == 'R':
+                # nxt_state_obj += (curr_rob_obj,)
+            
+                nxt_loc = (curr_rob_loc[0], min(self._n_cols, curr_rob_loc[1] + 1))
+                if self.wall_exists(nxt_loc, act_tuple[i]):
+                    nxt_state_tmp += (curr_rob_loc,)
+                else:
+                    nxt_state_tmp += (nxt_loc,)
+        
+            elif act_tuple[i] == 'N/P':
+                # if curr_rob_loc in objs_loc:
+                #     nxt_state_obj += (objs_list[objs_loc.index(curr_rob_loc)])
+            
+                nxt_state_tmp += (state_tuple[i],)
+        
+            else:
+                print(colored('Action not recognized. Skipping matrix probability', 'red'))
+                continue
+    
+        can_act = np.ones(self._n_robots)
+        for i in range(self._n_robots):
+            for j in range(i + 1, self._n_robots):
+                if nxt_state_tmp[i] == nxt_state_tmp[j]:
+                    can_act[i] = 0
+                    can_act[j] = 0
+        nxt_state = ()
+        for i in range(self._n_robots):
+            if can_act[i] > 0:
+                nxt_state += (nxt_state_tmp[i],)
+            else:
+                nxt_state += (state_tuple[i],)
+        nxt_idx = state_lst.index(MultipleRobotMazeWorld.get_state_str(nxt_state))
+        p[nxt_idx] += (1.0 - self._fail_chance)
+        p[state_idx] += self._fail_chance
+    
+        return p
 

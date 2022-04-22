@@ -31,14 +31,9 @@ function initSurvey(){
         random_id = Math.floor(Math.random() * 1000000);
     }
     used_ids['unique-ids'].push(random_id);
-    if (condition_distribution["optimal"] > condition_distribution["legible"]){
-        condition = 'legible';
-    } else if (condition_distribution["optimal"] < condition_distribution["legible"]){
-        condition = 'optimal';
-    } else {
-        r_cond = Math.floor(Math.random() * test_conditions.length);
-        condition = test_conditions[r_cond];
-    }
+    //r_cond = Math.floor(Math.random() * test_conditions.length);
+    //condition = test_conditions[r_cond];
+    condition = 'optimal';
     localStorage.setItem("condition", condition);
     localStorage.setItem("unique-id", random_id);
     localStorage.setItem("score", score);
@@ -289,14 +284,14 @@ function finishSurvey(objButton){
     id = document.querySelector('input[name="unique-id"]').value;
     answers = JSON.parse(localStorage.getItem("answers"));
     if (id !== ""){
-        answers['unique-id'] = parseInt(id);
+        answers['unique-id'] = id;
         old_ids = JSON.parse(localStorage.getItem("used_ids"));
         old_ids['unique-ids'].pop();
-        old_ids['unique-ids'].push(parseInt(id));
+        old_ids['unique-ids'].push(id);
         updateIDs(old_ids);
     }
     saveAnswers();
-    //window.location.href = "https://app.prolific.co/submissions/complete?cc=45C26FC8";
+    window.location.href = "https://app.prolific.co/submissions/complete?cc=316B1D99";
 
 }
 
@@ -367,6 +362,7 @@ function saveAnswers(){
     }
     httpc.setRequestHeader("Content-type", "application/json");
     data = {};
+    data['id'] = answers['unique-id'];
     data['headers'] = Object.keys(answers);
     data['answers'] = Object.values(answers);
     httpc.send(JSON.stringify(data));
