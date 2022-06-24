@@ -8,7 +8,6 @@ import pickle
 import yaml
 import itertools
 import time
-import statistics
 
 from pathlib import Path
 from gym.envs.registration import register
@@ -21,6 +20,8 @@ from agents.legible_mdp_agent import LegibleMDPAgent
 from utils import policy_iteration
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
+from statistics import stdev
+from math import sqrt
 
 # Environment parameters
 N_AGENTS = 2
@@ -532,12 +533,13 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 		later_food_step = 0
 		pred_step = 0
 
-		env.render()
+		# env.render()
 		
+		print('Environment setup complete. Starting evaluation')
 		while not done:
 			n_steps += 1
 
-			env.render()
+			# env.render()
 			last_leader_sample = (leader_state, actions[0])
 			# print(' '.join(plan_actions[x] for x in actions), plan_states[leader_state], plan_states[follower_state])
 			# print(leading_agent.task, follower_agent.task_inference())
@@ -551,6 +553,7 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 				done = True
 
 			elif current_food_count < n_spawn_foods:
+				print('Food caught')
 				n_spawn_foods = current_food_count
 				leader_state = plan_states.index(get_state(observation[0], 1))
 				follower_state = plan_states.index(get_state(observation[1], 1))
@@ -620,10 +623,10 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 						   follower_agent.action(follower_state, last_leader_sample, 1.0, rng_gen))
 
 			history += [[plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
-			time.sleep(0.25)
+			# time.sleep(0.15)
 			# input()
 	
-		env.reset()
+		# env.render()
 
 		follower_agent.reset_inference()
 		print('Run Over!!')
@@ -717,8 +720,8 @@ def main():
 																	 (*follower_opt_decision, *follower_leg_decision), (actions_ma, transitions_ma, rewards_ma),
 																	 optimal_ma_decision, fields, food_locs, rng_gen)
 		
-		print('Average number of steps: %.2f and std deviation of %.2f' % (avg_steps, statistics.stdev(run_steps)))
-		print('Average steps to correct guess: %.2f and std deviation of %.2f' % (avg_pred, statistics.stdev(pred_steps)))
+		print('Average number of steps: %.2f and std error of %.2f' % (avg_steps, stdev(run_steps) / sqrt(n_runs)))
+		print('Average steps to correct guess: %.2f and std error of %.2f' % (avg_pred, stdev(pred_steps) / sqrt(n_runs)))
 		print(run_steps)
 		print(pred_steps)
 		results[comp] = {'avg steps': avg_steps, 'run steps': run_steps, 'avg predictions': avg_pred, 'predictions steps': pred_steps}
