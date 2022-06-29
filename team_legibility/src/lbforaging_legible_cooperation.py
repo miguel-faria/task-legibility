@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import sys
 
 import numpy as np
 import tensorflow as tf
@@ -9,6 +10,7 @@ import pickle
 import yaml
 import itertools
 import time
+import multiprocessing as mp
 
 from pathlib import Path
 from gym.envs.registration import register
@@ -452,10 +454,16 @@ def agent_coordination(leader_loc: Tuple, follower_loc: Tuple, actions: Tuple[in
 
 
 def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, leader_decision: Tuple, follower_decision: Tuple,
-				   ma_model: Tuple, ma_decision: Tuple, fields: List, food_locs: List, rng_gen: np.random.Generator, use_render: bool) -> Tuple:
-	
+				   ma_model: Tuple, ma_decision: Tuple, fields: List, food_locs: List, rng_gen: np.random.Generator, use_render: bool,
+				   log_dir: Path, log_prefix: str) -> Tuple:
+
+	# Setting logging outputs
+	sys.stdout = open(log_dir / (log_prefix + '_' + str(mode) + '_log.txt'), 'w')
+	sys.stderr = open(log_dir / (log_prefix + '_' + str(mode) + '_err.txt'), 'w')
+
 	# Eval parameters setup
 	print('Running eval for team composition %d' % mode)
+	env.seed(RNG_SEED)
 	avg_run_steps = 0
 	avg_run_predict_steps = 0
 	plan_states, plan_actions, transitions, leader_rewards, follower_rewards = sa_model
@@ -479,7 +487,7 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 		follower_agent = ToMAgent(follower_leg_q_library, 1, leader_opt_q_library)
 	else:
 		print(colored('[Error] Invalid execution mode: %d. Stopping execution' % mode), 'red')
-		return -1
+		return -1, -1, [], []
 
 	deadlock_states = []
 	run_steps = []
@@ -657,8 +665,19 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 		avg_run_steps += n_steps / nruns
 		avg_run_predict_steps += pred_step / nruns
 
-	# print(deadlock_states)
 	print('Number of Deadlocks %d' % int(len(deadlock_states)))
+	print('Average number of steps: %.2f and std error of %.2f' % (avg_run_steps, stdev(run_steps) / sqrt(nruns)))
+	avg_run_preds = []
+	for run_preds in run_predict_steps:
+		n_preds = len(run_preds)
+		if n_preds > 0:
+			run_avg = 0
+			for pred in run_preds:
+				run_avg += pred / n_preds
+			avg_run_preds += [run_avg]
+	print('Average steps to correct guess: %.2f and std error of %.2f' % (avg_run_predict_steps, stdev(avg_run_preds) / sqrt(nruns)))
+	print(run_steps)
+	print(run_predict_steps)
 	return avg_run_steps, avg_run_predict_steps, run_steps, run_predict_steps
 
 
@@ -686,21 +705,22 @@ def main():
 	
 	parser = argparse.ArgumentParser(description='LB-Foraging cooperation scenario using legible TOM with 2 agents and 2 food items')
 	parser.add_argument('--mode', dest='mode', type=int, required=True, choices=[0, 1, 2, 3], nargs='+',
-						help='Team composition mode:'
+						help='List with team composition modes:'
 							 '\n\t0 - Optimal agent controls interaction with an optimal follower '
 							 '\n\t1 - Legible agent controls interaction with a legible follower '
 							 '\n\t2 - Legible agent controls interaction with an optimal follower'
 							 '\n\t3 - Optimal agent controls interaction with a legible follower')
 	parser.add_argument('--runs', dest='nruns', type=int, required=True, help='Number of trial runs to obtain eval')
-	parser.add_argument('--render', dest='render', type=bool, action='store_true', help='Activate the render to see the interaction')
-	parser.add_argument('--paralell', dest='paralell', type=bool, action='store_true',
+	parser.add_argument('--render', dest='render', action='store_true', help='Activate the render to see the interaction')
+	parser.add_argument('--paralell', dest='paralell', action='store_true',
 						help='Use paralell computing to speed the evaluation process. (Can\'t be used with render or gpu active)')
-	parser.add_argument('--use_gpu', dest='gpu', type=bool, action='store_true', help='Use gpu for matrix computations')
+	parser.add_argument('--use_gpu', dest='gpu', action='store_true', help='Use gpu for matrix computations')
 
 	args = parser.parse_args()
 	team_comps = args.mode
 	n_runs = args.nruns
 	use_render = args.render
+	paralellize = args.paralell
 	
 	env = gym.make("Foraging-{0}x{0}-{1}p-{2}f{3}-v1".format(FIELD_LENGTH, N_AGENTS, MAX_FOOD, "-coop" if COOP else ""))
 	filename_prefix = 'lbforaging_' + str(FIELD_LENGTH) + 'x' + str(FIELD_LENGTH) + '_a' + str(N_AGENTS) + 'l' + str(FOOD_LVL)
@@ -733,27 +753,31 @@ def main():
 		fields += [field]
 	
 	results = {}
-	for comp in team_comps:
-		env.seed(RNG_SEED)
-		rng_gen = np.random.default_rng(RNG_SEED)
-		avg_steps, avg_pred, run_steps, pred_steps = eval_behaviour(n_runs, env, comp, (*leader_env, follower_rewards),
-																	 (*leader_opt_decision, *leader_leg_decision),
-																	 (*follower_opt_decision, *follower_leg_decision), (actions_ma, transitions_ma, rewards_ma),
-																	 optimal_ma_decision, fields, food_locs, rng_gen, use_render)
-		
-		print('Average number of steps: %.2f and std error of %.2f' % (avg_steps, stdev(run_steps) / sqrt(n_runs)))
-		avg_run_preds = []
-		for run_preds in pred_steps:
-			n_preds = len(run_preds)
-			if n_preds > 0:
-				run_avg = 0
-				for pred in run_preds:
-					run_avg += pred / n_preds
-				avg_run_preds += [run_avg]
-		print('Average steps to correct guess: %.2f and std error of %.2f' % (avg_pred, stdev(avg_run_preds) / sqrt(n_runs)))
-		print(run_steps)
-		print(pred_steps)
-		results[comp] = {'avg steps': avg_steps, 'run steps': run_steps, 'avg predictions': avg_pred, 'predictions steps': pred_steps}
+	log_dir = Path(__file__).parent.absolute().parent.absolute() / 'logs'
+	log_prefix = filename_prefix + '_' + str(n_runs) + '_' + ''.join([str(x) for x in team_comps])
+	if paralellize:
+		pool = mp.Pool(int(mp.cpu_count() / 2))
+		pool_results = [pool.apply(eval_behaviour, args=(n_runs, env, comp, (*leader_env, follower_rewards),
+														 (*leader_opt_decision, *leader_leg_decision),
+														 (*follower_opt_decision, *follower_leg_decision),
+														 (actions_ma, transitions_ma, rewards_ma),
+														 optimal_ma_decision, fields, food_locs, rng_gen, False,
+														 log_dir, log_prefix)) for comp in team_comps]
+		pool.close()
+		for idx in range(len(pool_results)):
+			avg_steps, avg_pred, run_steps, pred_steps = pool_results[idx]
+			results[team_comps[idx]] = {'avg steps': avg_steps, 'run steps': run_steps, 'avg predictions': avg_pred, 'predictions steps': pred_steps}
+	else:
+		for comp in team_comps:
+			rng_gen = np.random.default_rng(RNG_SEED)
+			avg_steps, avg_pred, run_steps, pred_steps = eval_behaviour(n_runs, env, comp, (*leader_env, follower_rewards),
+																		(*leader_opt_decision, *leader_leg_decision),
+																		(*follower_opt_decision, *follower_leg_decision),
+																		(actions_ma, transitions_ma, rewards_ma),
+																		optimal_ma_decision, fields, food_locs, rng_gen, use_render,
+																		log_dir, log_prefix)
+
+			results[comp] = {'avg steps': avg_steps, 'run steps': run_steps, 'avg predictions': avg_pred, 'predictions steps': pred_steps}
 	
 	results_file = data_dir / 'results' / (filename_prefix + '_' + str(n_runs) + '_' + ''.join([str(x) for x in team_comps]) + '.csv')
 	write_full_results_csv(results_file, results, 'w', ['comp', 'avg steps', 'run steps', 'avg predictions', 'predictions steps'])
