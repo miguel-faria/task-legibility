@@ -527,9 +527,9 @@ def main():
 	parser.add_argument('--world-keys', dest='world_keys', type=int, nargs='+',
 						help='List of world keys to test')
 	parser.add_argument('--verbose', dest='verbose', action='store_true',
-						help='Discount factor for the MDPs')
+						help='Run MDPs methods with verbose printing')
 	parser.add_argument('--no-verbose', dest='verbose', action='store_false',
-						help='Discount factor for the MDPs')
+						help='Run MDPs methods without verbose printing')
 	# parser.add_argument('--name', dest='', type=, required=, choices=[],
 	# 					help='')
 	

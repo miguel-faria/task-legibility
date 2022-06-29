@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import numpy as np
+import tensorflow as tf
 import argparse
 import gym
 import lbforaging
@@ -50,6 +51,7 @@ register(
 
 
 ACTION_MAP = {0: 'None', 1: 'Up', 2: 'Down', 3: 'Left', 4: 'Right', 5: 'Load'}
+ACTION_MOVE = {0: (0, 0), 1: (-1, 0), 2: (1, 0), 3: (0, -1), 4: (0, 1), 5: (0, 0)}
 
 
 class LeadingAgent:
@@ -435,13 +437,27 @@ def is_deadlock(history: List, new_states: Tuple, n_agents: int) -> bool:
 	return deadlock
 
 
+def agent_coordination(leader_loc: Tuple, follower_loc: Tuple, actions: Tuple[int, int], field_size: Tuple) -> Tuple[int, int]:
+
+	rows, cols = field_size
+	leader_move = ACTION_MOVE[actions[0]]
+	follower_move = ACTION_MOVE[actions[1]]
+	nxt_leader_loc = (max(min(leader_loc[0] + leader_move[0], rows), 0), max(min(leader_loc[1] + leader_move[1], cols), 0))
+	nxt_follower_loc = (max(min(follower_loc[0] + follower_move[0], rows), 0), max(min(follower_loc[1] + follower_move[1], cols), 0))
+	
+	if nxt_leader_loc == nxt_follower_loc:
+		return actions[0], list(ACTION_MAP.keys())[list(ACTION_MAP.values()).index('None')]
+	else:
+		return actions
+
+
 def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, leader_decision: Tuple, follower_decision: Tuple,
-				   ma_model: Tuple, ma_decision: Tuple, fields: List, food_locs: List, rng_gen: np.random.Generator) -> Tuple:
+				   ma_model: Tuple, ma_decision: Tuple, fields: List, food_locs: List, rng_gen: np.random.Generator, use_render: bool) -> Tuple:
 	
 	# Eval parameters setup
 	print('Running eval for team composition %d' % mode)
 	avg_run_steps = 0
-	avg_predict_steps = 0
+	avg_run_predict_steps = 0
 	plan_states, plan_actions, transitions, leader_rewards, follower_rewards = sa_model
 	leader_opt_q_library, leader_opt_pol_library, leader_leg_q_library, leader_leg_pol_library = leader_decision
 	follower_opt_q_library, follower_opt_pol_library, follower_leg_q_library, follower_leg_pol_library = follower_decision
@@ -467,7 +483,7 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 
 	deadlock_states = []
 	run_steps = []
-	predict_steps = []
+	run_predict_steps = []
 	
 	for i in range(nruns):
 		print('Starting run %d' % (i + 1))
@@ -528,22 +544,22 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 		n_steps = 0
 		run_history = []
 		history = [[plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
+		n_pred_steps = []
 		act_try = 0
 		later_error = 0
 		later_food_step = 0
 		pred_step = 0
 
-		# env.render()
+		if use_render:
+			env.render()
 		
 		print('Environment setup complete. Starting evaluation')
 		while not done:
 			n_steps += 1
-
-			# env.render()
+			
+			if use_render:
+				env.render()
 			last_leader_sample = (leader_state, actions[0])
-			# print(' '.join(plan_actions[x] for x in actions), plan_states[leader_state], plan_states[follower_state])
-			# print(leading_agent.task, follower_agent.task_inference())
-			# print(leading_agent.q_library[leading_agent.task][leader_state].sum())
 			if leading_agent.task != follower_agent.task_inference():
 				later_error = n_steps
 			observation, _, _, _ = env.step(actions)
@@ -559,6 +575,7 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 				follower_state = plan_states.index(get_state(observation[1], 1))
 				food_left = [tuple(x) for x in np.transpose(np.nonzero(env.field))]
 				run_history += [history]
+				n_pred_steps += [(later_error - later_food_step)]
 				pred_step += (later_error - later_food_step) / (MAX_FOOD - 1)
 				later_food_step = n_steps
 				later_error = n_steps
@@ -621,23 +638,28 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 				act_try = 0
 				actions = (leading_agent.opt_acting(leader_state, rng_gen),
 						   follower_agent.action(follower_state, last_leader_sample, 1.0, rng_gen))
-
+			
+			leader_loc = observation[0][3 * MAX_FOOD + 0:3 * MAX_FOOD + 2]
+			follower_loc = observation[1][3 * MAX_FOOD + 0:3 * MAX_FOOD + 2]
+			actions = agent_coordination(leader_loc, follower_loc, actions, env.field_size)
 			history += [[plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
-			# time.sleep(0.15)
-			# input()
-	
-		# env.render()
+			if use_render:
+				time.sleep(0.15)
+				# input()
+		
+		if use_render:
+			env.render()
 
 		follower_agent.reset_inference()
 		print('Run Over!!')
 		run_steps += [n_steps]
-		predict_steps += [int(pred_step)]
+		run_predict_steps += [n_pred_steps]
 		avg_run_steps += n_steps / nruns
-		avg_predict_steps += pred_step / nruns
+		avg_run_predict_steps += pred_step / nruns
 
 	# print(deadlock_states)
 	print('Number of Deadlocks %d' % int(len(deadlock_states)))
-	return avg_run_steps, avg_predict_steps, run_steps, predict_steps
+	return avg_run_steps, avg_run_predict_steps, run_steps, run_predict_steps
 
 
 def write_full_results_csv(csv_file: Path, results: Dict, access_type: str, fields: List[str]) -> None:
@@ -651,7 +673,7 @@ def write_full_results_csv(csv_file: Path, results: Dict, access_type: str, fiel
 					row += [results[key][inner_key]]
 				rows += [row]
 			
-			headers = ', '.join(sorted(fields))
+			headers = ', '.join(fields)
 			np.savetxt(fname=csvfile, X=np.array(rows, dtype=object), delimiter=',', header=headers, fmt='%s', comments='')
 			
 		print('Results written to file')
@@ -670,10 +692,15 @@ def main():
 							 '\n\t2 - Legible agent controls interaction with an optimal follower'
 							 '\n\t3 - Optimal agent controls interaction with a legible follower')
 	parser.add_argument('--runs', dest='nruns', type=int, required=True, help='Number of trial runs to obtain eval')
+	parser.add_argument('--render', dest='render', type=bool, action='store_true', help='Activate the render to see the interaction')
+	parser.add_argument('--paralell', dest='paralell', type=bool, action='store_true',
+						help='Use paralell computing to speed the evaluation process. (Can\'t be used with render or gpu active)')
+	parser.add_argument('--use_gpu', dest='gpu', type=bool, action='store_true', help='Use gpu for matrix computations')
 
 	args = parser.parse_args()
 	team_comps = args.mode
 	n_runs = args.nruns
+	use_render = args.render
 	
 	env = gym.make("Foraging-{0}x{0}-{1}p-{2}f{3}-v1".format(FIELD_LENGTH, N_AGENTS, MAX_FOOD, "-coop" if COOP else ""))
 	filename_prefix = 'lbforaging_' + str(FIELD_LENGTH) + 'x' + str(FIELD_LENGTH) + '_a' + str(N_AGENTS) + 'l' + str(FOOD_LVL)
@@ -705,12 +732,6 @@ def main():
 			n_spawn_foods += 1
 		fields += [field]
 	
-	# fields = [np.array([[FOOD_LVL, 0, 0, 0, 0],
-	# 					[FOOD_LVL, 0, 0, 0, 0],
-	# 					[0, 0, FOOD_LVL, 0, 0],
-	# 					[0, 0, 0, 0, 0],
-	# 					[0, 0, 0, 0, FOOD_LVL]])]
-	
 	results = {}
 	for comp in team_comps:
 		env.seed(RNG_SEED)
@@ -718,10 +739,18 @@ def main():
 		avg_steps, avg_pred, run_steps, pred_steps = eval_behaviour(n_runs, env, comp, (*leader_env, follower_rewards),
 																	 (*leader_opt_decision, *leader_leg_decision),
 																	 (*follower_opt_decision, *follower_leg_decision), (actions_ma, transitions_ma, rewards_ma),
-																	 optimal_ma_decision, fields, food_locs, rng_gen)
+																	 optimal_ma_decision, fields, food_locs, rng_gen, use_render)
 		
 		print('Average number of steps: %.2f and std error of %.2f' % (avg_steps, stdev(run_steps) / sqrt(n_runs)))
-		print('Average steps to correct guess: %.2f and std error of %.2f' % (avg_pred, stdev(pred_steps) / sqrt(n_runs)))
+		avg_run_preds = []
+		for run_preds in pred_steps:
+			n_preds = len(run_preds)
+			if n_preds > 0:
+				run_avg = 0
+				for pred in run_preds:
+					run_avg += pred / n_preds
+				avg_run_preds += [run_avg]
+		print('Average steps to correct guess: %.2f and std error of %.2f' % (avg_pred, stdev(avg_run_preds) / sqrt(n_runs)))
 		print(run_steps)
 		print(pred_steps)
 		results[comp] = {'avg steps': avg_steps, 'run steps': run_steps, 'avg predictions': avg_pred, 'predictions steps': pred_steps}

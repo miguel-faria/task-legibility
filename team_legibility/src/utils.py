@@ -2,34 +2,26 @@
 
 import numpy as np
 
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 from scipy.sparse import csr_matrix
 
 
-def Ppi(transitions: List[csr_matrix], actions: np.ndarray, pol: np.ndarray) -> np.ndarray:
-	nA = len(actions)
-	ppi = pol[:, 0, None] * transitions[0].toarray()
+def Ppi(transitions: List[np.ndarray], nA: int, pol: np.ndarray) -> np.ndarray:
+	ppi = pol[:, 0, None] * transitions[0]
 	for i in range(1, nA):
-		ppi += pol[:, i, None] * transitions[i].toarray()
+		ppi += pol[:, i, None] * transitions[i]
 	
 	return ppi
 
 
-def evaluate_pol(mdp: Tuple, pol: np.ndarray):
-	X = mdp[0]
-	A = mdp[1]
-	P = mdp[2]
-	c = mdp[3]
-	gamma = mdp[4]
-	
-	nS = len(X)
+def evaluate_pol(transitions: List[np.ndarray], rewards: np.ndarray, gamma: float, pol: np.ndarray, nX: int, nA: int):
 	
 	# Cost and Probs averaged by policy
-	cpi = (pol * c).sum(axis=1)
-	ppi = Ppi(P, A, pol)
+	cpi = (pol * rewards).sum(axis=1)
+	ppi = Ppi(transitions, nA, pol)
 	
 	# J = (I - gamma*P)^-1 * c
-	J = np.linalg.inv(np.eye(nS) - gamma * ppi).dot(cpi)
+	J = np.linalg.inv(np.eye(nX) - gamma * ppi).dot(cpi)
 	
 	return J[:, None]
 
@@ -39,7 +31,9 @@ def policy_iteration(mdp: Tuple[np.ndarray, List[str], List[csr_matrix], np.ndar
 	
 	X = mdp[0]
 	A = mdp[1]
-	P = mdp[2]
+	P = []
+	for act in range(len(A)):
+		P += [mdp[2][act].toarray()]
 	c = mdp[3]
 	gamma = mdp[4]
 	nX = len(X)
@@ -64,10 +58,10 @@ def policy_iteration(mdp: Tuple[np.ndarray, List[str], List[csr_matrix], np.ndar
 	
 		# print('Iteration %d' % (i + 1), end='\r')
 	
-		J = evaluate_pol(mdp, pol)
+		J = evaluate_pol(P, c, gamma, pol, nX, nA)
 	
 		for act in range(nA):
-			Q[:, act, None] = c[:, act, None] + gamma * P[act].toarray().dot(J)
+			Q[:, act, None] = c[:, act, None] + gamma * P[act].dot(J)
 	
 		# print(Q)
 		Qmin = Q.max(axis=1, keepdims=True)
