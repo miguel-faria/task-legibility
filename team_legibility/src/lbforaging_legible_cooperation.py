@@ -107,6 +107,15 @@ class LeadingAgent:
 
 
 def state_valid(nxt_agent_locs: List, agent_locs: List, agent_lvs: List, food_state: int) -> str:
+	"""
+	Returns the valid next state based on the current and expected next agent locations
+	
+	:param nxt_agent_locs: list with expected next agent locations
+	:param agent_locs: list wit current agent locations
+	:param agent_lvs: list with the levels of the different agents
+	:param food_state: flag that captures if food has been caught or not
+	:return nxt_state: string id of the valid next state
+	"""
 	
 	n_agents = len(agent_locs)
 	dups = []
@@ -136,6 +145,17 @@ def state_valid(nxt_agent_locs: List, agent_locs: List, agent_lvs: List, food_st
 
 
 def update_transitions(states: Tuple, action: str, transitions: csr_matrix, food_locs: List, target_food: Tuple, field_size: Tuple) -> csr_matrix:
+	"""
+	Action transition updates for the selected target food, given the current field layout and food positions (general single-agent case)
+	
+	:param states: state space
+	:param action: action space
+	:param transitions: original sparse transition matrix for current action
+	:param food_locs: list with locations of foods in the environment
+	:param target_food: location of the current target food
+	:param field_size: tuple with the number of rows and columns in the field
+	:return new_trans: updated sparse transition matrix for current action
+	"""
 	
 	new_trans = transitions.toarray().copy()
 	other_foods = food_locs.copy()
@@ -171,8 +191,6 @@ def update_transitions(states: Tuple, action: str, transitions: csr_matrix, food
 				
 				nxt_state = states[nxt_state_idx]
 				nxt_state_true = ''.join([str(x) for x in agent_loc]) + str(agent_lvls[0]) + nxt_state[3:]
-				# if state == '1110210':
-				# 	print(state, nxt_state, nxt_state_true)
 				
 				if nxt_state_true not in states:
 					nxt_state_true = state
@@ -185,6 +203,19 @@ def update_transitions(states: Tuple, action: str, transitions: csr_matrix, food
 
 def update_agent_transitions(states: Tuple, action: str, food_locs: List, target_food: Tuple, field_size: Tuple,
 							 ma_actions: Tuple, ma_pol: np.ndarray) -> csr_matrix:
+	"""
+	Action transition updates for the selected target food, given the current field layout and food positions
+	(single-agent that considers other agents to follow optimal joint policy)
+	
+	:param states: state space
+	:param action: string id for the action
+	:param food_locs: list with locations of foods in the environment
+	:param target_food: location of the current target food
+	:param field_size: tuple with the number of rows and columns in the field
+	:param ma_actions: multi-agent joint action space
+	:param ma_pol: multi-agent optimal joint action policy
+	:return new_trans: updated sparse transition matrix for current action
+	"""
 	
 	nX = len(states)
 	new_trans = np.zeros((nX, nX))
@@ -243,6 +274,17 @@ def update_agent_transitions(states: Tuple, action: str, food_locs: List, target
 
 
 def update_ma_transitions(states: Tuple, joint_action: str, transitions: csr_matrix, food_locs: List, target_food: Tuple, field_size: Tuple) -> csr_matrix:
+	"""
+	Joint action transition updates for the selected target food, given the current field layout and food positions (general multi-agent case)
+	
+	:param states: state space
+	:param joint_action: string id for the current joint action
+	:param transitions: original sparse transition matrix for current joint action
+	:param food_locs: list with locations of foods in the environment
+	:param target_food: location of the current target food
+	:param field_size: tuple with the number of rows and columns in the field
+	:return new_trans: updated sparse transition matrix for current joint action
+	"""
 	
 	new_trans = transitions.toarray().copy()
 	other_foods = food_locs.copy()
@@ -300,6 +342,29 @@ def update_ma_transitions(states: Tuple, joint_action: str, transitions: csr_mat
 def update_decision(states: Tuple, actions: Tuple, transitions: Dict[str, List[csr_matrix]], spawn_foods: List, food_locs: List, field_size: Tuple, mode: int,
 					rewards: List, opt_pols_library: List, opt_q_library: List, leg_pols_library: List, leg_q_library: List, ma_actions: Tuple,
 					ma_transitions: Dict[str, List[csr_matrix]], ma_rewards: Dict[str, np.ndarray], ma_pols_library: List, ma_q_library: List) -> Tuple:
+	"""
+	Update the leader and follower's legible and optimal decision models with current field layout and food locations
+	
+	:param states: single-agent state space
+	:param actions: single-agent action space
+	:param transitions: single agent transition matrices
+	:param spawn_foods: list of foods in the field
+	:param food_locs: list with the locations of all foods spawned in the field
+	:param field_size: number of rows and columns in the field
+	:param mode: integer code for the agent team composition
+	:param rewards: list with the rewards for the follower and leader
+	:param opt_pols_library: library with the optimal policies for both the leader and follower
+	:param opt_q_library: library with the optimal q-values for both the leader and follower
+	:param leg_pols_library: library with the legible policies for both the leader and follower
+	:param leg_q_library: library with the legible q-values for both the leader and follower
+	:param ma_actions: multi-agent joint action space
+	:param ma_transitions: multi-agent joint action transition matrices
+	:param ma_rewards: multi-agent joint action reward functions
+	:param ma_pols_library: multi-agent optimal joint policies
+	:param ma_q_library: multi-agent optimal q-values
+	:return: tuple with the updated optimal and legible decision models for the leader and follower agents
+	"""
+	
 	updated_transitions = transitions.copy()
 	leader_rewards = rewards[0]
 	follower_rewards = rewards[1]
@@ -359,6 +424,13 @@ def update_decision(states: Tuple, actions: Tuple, transitions: Dict[str, List[c
 
 
 def get_state(observation: np.ndarray, food_picked: int) -> str:
+	"""
+	Obtain the current agent state from the agent's observation
+	
+	:param observation: array with the observed fruit and agents' positions
+	:param food_picked: integer flag that captures if the food has been picked
+	:return state: string id of the current agent's state
+	"""
 	
 	state = ''
 	
@@ -374,10 +446,27 @@ def get_state(observation: np.ndarray, food_picked: int) -> str:
 
 
 def adj_locs(loc: Tuple, field_size: Tuple) -> List[Tuple]:
+	"""
+	Obtain the list of locations adjacent to a specified location
+	
+	:param loc: target location to obtain adjacent locations
+	:param field_size: number of rows and columns in the field
+	:return: list of valid adjacent locations
+	"""
+	
 	return [(min(loc[0] + 1, field_size[0]), loc[1]), (max(loc[0] - 1, 0), loc[1]), (loc[0], min(loc[1] + 1, field_size[1])), (loc[0], max(loc[1] - 1, 0))]
 
 
 def spawn_food(field: np.ndarray, food_locs: List[Tuple], rng_gen: np.random.Generator, field_size: Tuple) -> np.ndarray:
+	"""
+	Randomly spawn foods in the current field, according to supplied food locations
+	
+	:param field: current field layout
+	:param food_locs: list of possible food locations
+	:param rng_gen: random number generator
+	:param field_size: field number of rows and columns
+	:return new_field: new field layout with foods spawned
+	"""
 	
 	new_field = field.copy()
 	foods = list([tuple(x) for x in np.argwhere(field > 0)])
@@ -398,6 +487,13 @@ def spawn_food(field: np.ndarray, food_locs: List[Tuple], rng_gen: np.random.Gen
 
 
 def load_env_model(filename) -> Tuple[Tuple, Tuple, Dict, Dict]:
+	"""
+	Load environment model from file
+	
+	:param filename: filename with stored environment
+	:return: loaded environment model (state space, action space, transition matrices, rewards library)
+	"""
+	
 	model_dir = Path(__file__).parent.absolute().parent.absolute() / 'models'
 	model_file = model_dir / (filename + '.pkl')
 	data = pickle.load(open(model_file, 'rb'))
@@ -405,6 +501,13 @@ def load_env_model(filename) -> Tuple[Tuple, Tuple, Dict, Dict]:
 
 
 def load_decision_model(filename) -> Tuple[List[np.ndarray], List[np.ndarray]]:
+	"""
+	Load decision model from file
+	
+	:param filename: filename with stored decision model
+	:return: loaded decision model (q-matrix and policy)
+	"""
+	
 	model_dir = Path(__file__).parent.absolute().parent.absolute() / 'models'
 	model_file = model_dir / (filename + '.pkl')
 	data = pickle.load(open(model_file, 'rb'))
@@ -412,6 +515,14 @@ def load_decision_model(filename) -> Tuple[List[np.ndarray], List[np.ndarray]]:
 
 
 def is_deadlock(history: List, new_states: Tuple, n_agents: int) -> bool:
+	"""
+	Detector of repeated states in the agents' recent history
+	
+	:param history: list with the agents' states and actions
+	:param new_states: list with the next agents' states
+	:param n_agents: number of agents in the field
+	:return deadlock: true if agents' are in a deadlock
+	"""
 	
 	if len(history) < 3:
 		return False
@@ -440,6 +551,15 @@ def is_deadlock(history: List, new_states: Tuple, n_agents: int) -> bool:
 
 
 def agent_coordination(leader_loc: Tuple, follower_loc: Tuple, actions: Tuple[int, int], field_size: Tuple) -> Tuple[int, int]:
+	"""
+	Joint action coordination to prevent agents blocking each other, following the social convention that the follower yields to the leader
+	
+	:param leader_loc: leader current location
+	:param follower_loc: follower current location
+	:param actions: non-coordinated agent actions
+	:param field_size: field's number of rows and columns
+	:return new_actions: agents' coordinated joint action
+	"""
 	
 	rows, cols = field_size
 	leader_move = ACTION_MOVE[actions[0]]
@@ -456,6 +576,26 @@ def agent_coordination(leader_loc: Tuple, follower_loc: Tuple, actions: Tuple[in
 def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, leader_decision: Tuple, follower_decision: Tuple,
 				   ma_model: Tuple, ma_decision: Tuple, fields: List, food_locs: List, rng_gen: np.random.Generator, use_render: bool,
 				   log_dir: Path, log_prefix: str) -> Tuple:
+	"""
+	Evaluation of the cooperation in a level-based foraging scenario giving a team composition
+	
+	:param nruns: number of runs for the evaluation cycle
+	:param env: level-based foraging environment
+	:param mode: mode used for the team compostion
+	:param sa_model: single-agent environment model for leader and follower
+	:param leader_decision: leader agent's optimal and legible decision model
+	:param follower_decision: follower agent's optimal and legible decision model
+	:param ma_model: multi-agent environment model
+	:param ma_decision: multi-agent optimal joint decision model
+	:param fields: list of field layouts to evaluate the cooperation (used for result comparison across different team compositions)
+	:param food_locs: list of possible food locations
+	:param rng_gen: random number generator
+	:param use_render: flag that controls if evaluation runs are rendered for visualization
+	:param log_dir: path for the logging folder
+	:param log_prefix: logging filename prefix
+	:return: tuple with average steps to capture all food items, average number of steps for follower to correctly predict the current food item, list with the number of steps
+	per evaluation run and list with number of steps for correct prediction per evaluation run
+	"""
 	
 	# Setting logging outputs
 	sys.stdout = open(log_dir / (log_prefix + '_' + str(mode) + '_log.txt'), 'w')
@@ -493,6 +633,7 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 	run_steps = []
 	run_predict_steps = []
 	
+	# Evaluation cycle
 	for i in range(nruns):
 		print('Starting run %d' % (i + 1))
 		print('Environment setup')
@@ -533,7 +674,6 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 			follower_agent.q_library = follower_decision_model[3]
 			follower_agent.q_sample = leader_decision_model[1]
 		
-		# initial_food = tuple(rng_gen.choice(spawn_foods))
 		leader_state = get_state(observation[0], 0)
 		follower_state = get_state(observation[1], 0)
 		leader_state = plan_states.index(leader_state)
@@ -653,7 +793,7 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 			history += [[plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
 			if use_render:
 				time.sleep(0.15)
-			# input()
+				# input()
 		
 		if use_render:
 			env.render()
@@ -665,6 +805,7 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 		avg_run_steps += n_steps / nruns
 		avg_run_predict_steps += pred_step / nruns
 	
+	# Print evaluation results
 	print('Number of Deadlocks %d' % int(len(deadlock_states)))
 	print('Average number of steps: %.2f and std error of %.2f' % (avg_run_steps, stdev(run_steps) / sqrt(nruns)))
 	avg_run_preds = []
@@ -678,10 +819,21 @@ def eval_behaviour(nruns: int, env: ForagingEnv, mode: int, sa_model: Tuple, lea
 	print('Average steps to correct guess: %.2f and std error of %.2f' % (avg_run_predict_steps, stdev(avg_run_preds) / sqrt(nruns)))
 	print(run_steps)
 	print(run_predict_steps)
+	
 	return avg_run_steps, avg_run_predict_steps, run_steps, run_predict_steps
 
 
 def write_full_results_csv(csv_file: Path, results: Dict, access_type: str, fields: List[str]) -> None:
+	"""
+	Results writing to csv file
+	
+	:param csv_file: path to output csv file
+	:param results: dictionary with results ordered by team composition code
+	:param access_type: string code for type of access to csv file
+	:param fields: field headers for csv file
+	:return: None
+	"""
+	
 	try:
 		with open(csv_file, access_type) as csvfile:
 			rows = []
