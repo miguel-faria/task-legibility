@@ -2,6 +2,7 @@
 import sys
 
 import numpy as np
+import tensorflow as tf
 import argparse
 import gym
 import lbforaging
@@ -9,18 +10,20 @@ import pickle
 import yaml
 import itertools
 import time
-import multiprocessing as mp
 import os
+import subprocess
 
 from pathlib import Path
 from gym.envs.registration import register
 from lbforaging.foraging.environment import ForagingEnv
+from numpy import ndarray
+
 from environments.lb_foraging_plan import ForagingPlan
 from termcolor import colored
 from typing import List, Tuple, Dict
 from agents.tom_agent import ToMAgent
 from agents.legible_mdp_agent import LegibleMDPAgent
-from utils import policy_iteration, load_savepoint, store_savepoint
+from utils import policy_iteration_gpu, load_savepoint, store_savepoint
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
 from statistics import stdev
@@ -32,8 +35,8 @@ MAX_FOOD = 4
 AGENT_LVL = 1
 FOOD_LVL = 2
 COOP = True
-FIELD_LENGTH = 5
-AGENT_SIGHT = 5
+FIELD_LENGTH = 8
+AGENT_SIGHT = 8
 RNG_SEED = 20220510
 MAX_STEPS = 300
 
@@ -89,6 +92,48 @@ class LeadingAgent:
 	
 	def set_task(self, task_id: int):
 		self._task = task_id
+
+	def update_decision(self, q_library: List[tf.Tensor], pol_library: List[np.ndarray]):
+		self._pol_library = pol_library
+		for i in range(len(self._q_library)):
+			self._q_library[i] = q_library[i].numpy()
+
+
+def gpu_query_free_memory() -> Dict:
+	"""
+	Querry nvidia-smi for Nvidia GPUs free memory
+	
+	:return gpu_memory_map: dictonary with the free GPU memory indexed to each GPU
+	"""
+	result = subprocess.check_output([ 'nvidia-smi', '--query-gpu=memory.free', '--format=csv,nounits,noheader'], encoding='utf-8')
+	gpu_memory = [int(x) for x in result.strip().split('\n')]
+	gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
+	return gpu_memory_map
+
+
+def get_gpu_most_free() -> int:
+	"""
+	Obtain the gpu with more free memory
+	
+	:return: index for the gpu
+	"""
+	
+	gpu_free_mem = gpu_query_free_memory()
+	free_mem = list(gpu_free_mem.values())
+	return free_mem.index(max(free_mem))
+
+
+def convert_csr_to_sparse_tensor(sparse_mat: csr_matrix) -> tf.SparseTensor:
+	"""
+	Convert a Scipy CSR Sparse matrix to a Tensorflow SparseTensor
+
+	:param sparse_mat: input CSR sparse matrix
+	:return: output tensorflow SparseTensor
+	"""
+	
+	coo = sparse_mat.tocoo( )
+	indices: ndarray = np.mat([coo.row, coo.col]).transpose( )
+	return tf.SparseTensor(indices, coo.data, coo.shape)
 
 
 def state_valid(nxt_agent_locs: List, agent_locs: List, agent_lvs: List, food_state: int) -> str:
@@ -187,7 +232,7 @@ def update_transitions(states: Tuple, action: str, transitions: csr_matrix, food
 
 
 def update_agent_transitions(states: Tuple, action: str, food_locs: List, target_food: Tuple, field_size: Tuple,
-							 ma_actions: Tuple, ma_pol: np.ndarray) -> csr_matrix:
+							 ma_actions: Tuple, ma_pol: np.ndarray) -> tf.SparseTensor:
 	"""
 	Action transition updates for the selected target food, given the current field layout and food positions
 	(single-agent that considers other agents to follow optimal joint policy)
@@ -255,10 +300,10 @@ def update_agent_transitions(states: Tuple, action: str, food_locs: List, target
 			nxt_state = state_valid(nxt_agent_locs, agent_locs, agent_lvls, 1 if load_lvl_sum >= FOOD_LVL else food_state)
 			new_trans[state_idx, states.index(nxt_state)] += ma_pol[state_idx, pol_act_idx]
 	
-	return csr_matrix(new_trans)
+	return tf.sparse.from_dense(tf.convert_to_tensor(new_trans))
 
 
-def update_ma_transitions(states: Tuple, joint_action: str, transitions: csr_matrix, food_locs: List, target_food: Tuple, field_size: Tuple) -> csr_matrix:
+def update_ma_transitions(states: Tuple, joint_action: str, transitions: tf.SparseTensor, food_locs: List, target_food: Tuple, field_size: Tuple) -> tf.SparseTensor:
 	"""
 	Joint action transition updates for the selected target food, given the current field layout and food positions (general multi-agent case)
 	
@@ -271,7 +316,7 @@ def update_ma_transitions(states: Tuple, joint_action: str, transitions: csr_mat
 	:return new_trans: updated sparse transition matrix for current joint action
 	"""
 	
-	new_trans = transitions.toarray().copy()
+	new_trans = tf.sparse.to_dense(transitions).numpy()
 	other_foods = food_locs.copy()
 	if target_food in other_foods:
 		other_foods.remove(target_food)
@@ -321,7 +366,7 @@ def update_ma_transitions(states: Tuple, joint_action: str, transitions: csr_mat
 			new_trans[state_idx, nxt_state_idx] = 0.0
 			new_trans[state_idx, states.index(nxt_state)] = 1.0
 	
-	return csr_matrix(new_trans)
+	return tf.sparse.from_dense(tf.convert_to_tensor(new_trans))
 
 
 def update_decision(states: Tuple, actions: Tuple, transitions: Dict[str, List[csr_matrix]], spawn_foods: List, food_locs: List, field_size: Tuple, mode: int,
@@ -369,38 +414,44 @@ def update_decision(states: Tuple, actions: Tuple, transitions: Dict[str, List[c
 		for joint_act_idx in range(len(ma_actions)):
 			updated_ma_transitions += [update_ma_transitions(states, ma_actions[joint_act_idx], ma_transitions[task_key][joint_act_idx],
 															 spawn_foods, food, field_size)]
-		ma_opt_pol, _ = policy_iteration((states, ma_actions, updated_ma_transitions, ma_rewards[task_key], 0.9),
-										 ma_pols_library[task_idx], ma_q_library[task_idx])
+		ma_opt_pol, _ = policy_iteration_gpu((states, ma_actions, updated_ma_transitions, ma_rewards[task_key], 0.9),
+											 ma_pols_library[task_idx], ma_q_library[task_idx])
 		update_food_transitions = []
 		for act_idx in range(len(actions)):
 			update_food_transitions += [update_agent_transitions(states, actions[act_idx], spawn_foods, food, field_size, ma_actions, ma_opt_pol)]
 		updated_transitions[task_key] = update_food_transitions
 		
-		leader_opt_pol, leader_opt_q = policy_iteration((states, actions, updated_transitions[task_key], leader_rewards[task_key], 0.9),
-														l_opt_pol_library[task_idx], l_opt_q_library[task_idx])
-		follower_opt_pol, follower_opt_q = policy_iteration((states, actions, updated_transitions[task_key], follower_rewards[task_key], 0.9),
-															f_opt_pol_library[task_idx], f_opt_q_library[task_idx])
+		leader_opt_pol, leader_opt_q = policy_iteration_gpu((states, actions, updated_transitions[task_key], leader_rewards[task_key], 0.9),
+															l_opt_pol_library[task_idx], l_opt_q_library[task_idx])
+		follower_opt_pol, follower_opt_q = policy_iteration_gpu((states, actions, updated_transitions[task_key], follower_rewards[task_key], 0.9),
+																f_opt_pol_library[task_idx], f_opt_q_library[task_idx])
 		l_opt_pol_library[task_idx] = leader_opt_pol
 		l_opt_q_library[task_idx] = leader_opt_q
 		f_opt_pol_library[task_idx] = follower_opt_pol
 		f_opt_q_library[task_idx] = follower_opt_q
 	
 	if mode == 1 or mode == 3:
+		leader_q_library = []
+		for idx in range(len(l_opt_q_library)):
+			leader_q_library += [l_opt_q_library[idx].numpy()]
 		leader_legible_mdp = LegibleMDPAgent(states, actions, list(updated_transitions.values()), 0.9, False, list(transitions.keys()),
-											 0.75, 1, l_opt_q_library)
+											 0.75, 1, leader_q_library)
 		for food_idx in tqdm(range(len(food_locs)), desc='Update leader legible policy with current field'):
 			task_key = ''.join([str(x) for x in food_locs[food_idx]])
-			leg_pol, leg_q = policy_iteration((states, actions, updated_transitions[task_key], leader_legible_mdp.costs[food_idx], 0.9),
-											  l_leg_pol_library[food_idx], l_leg_q_library[food_idx])
+			leg_pol, leg_q = policy_iteration_gpu((states, actions, updated_transitions[task_key], leader_legible_mdp.costs[food_idx], 0.9),
+												  l_leg_pol_library[food_idx], l_leg_q_library[food_idx])
 			l_leg_pol_library[food_idx] = leg_pol
 			l_leg_q_library[food_idx] = leg_q
 	if mode == 2 or mode == 3:
+		follower_q_library = []
+		for idx in range(len(f_opt_q_library)):
+			follower_q_library += [f_opt_q_library[idx].numpy()]
 		follower_legible_mdp = LegibleMDPAgent(states, actions, list(updated_transitions.values()), 0.9, False, list(transitions.keys()),
-											   0.75, 1, f_opt_q_library)
+											   0.75, 1, follower_q_library)
 		for food_idx in tqdm(range(len(food_locs)), desc='Update follower legible policy with current field'):
 			task_key = ''.join([str(x) for x in food_locs[food_idx]])
-			leg_pol, leg_q = policy_iteration((states, actions, updated_transitions[task_key], follower_legible_mdp.costs[food_idx], 0.9),
-											  f_leg_pol_library[food_idx], f_leg_q_library[food_idx])
+			leg_pol, leg_q = policy_iteration_gpu((states, actions, updated_transitions[task_key], follower_legible_mdp.costs[food_idx], 0.9),
+												  f_leg_pol_library[food_idx], f_leg_q_library[food_idx])
 			f_leg_pol_library[food_idx] = leg_pol
 			f_leg_q_library[food_idx] = leg_q
 	
@@ -411,7 +462,7 @@ def update_decision(states: Tuple, actions: Tuple, transitions: Dict[str, List[c
 def get_state(observation: np.ndarray, food_picked: int, n_agents: int, max_food: int) -> str:
 	"""
 	Obtain the current agent state from the agent's observation
-	
+
 	:param observation: array with the observed fruit and agents' positions
 	:param food_picked: integer flag that captures if the food has been picked
 	:param n_agents: number of agents in the field
@@ -447,7 +498,7 @@ def adj_locs(loc: Tuple, field_size: Tuple) -> List[Tuple]:
 def spawn_food(field: np.ndarray, food_locs: List[Tuple], rng_gen: np.random.Generator, field_size: Tuple, max_food: int) -> np.ndarray:
 	"""
 	Randomly spawn foods in the current field, according to supplied food locations
-	
+
 	:param field: current field layout
 	:param food_locs: list of possible food locations
 	:param rng_gen: random number generator
@@ -519,9 +570,9 @@ def is_deadlock(history: List, new_states: Tuple, n_agents: int) -> bool:
 	last_actions = ()
 	for step in history[-3:]:
 		for agent_idx in range(n_agents):
-			last_states += (step[n_agents * agent_idx + 1], )
+			last_states += (step[n_agents * agent_idx],)
 	for agent_idx in range(n_agents):
-		last_actions += (history[-1][n_agents * agent_idx + 2], )
+		last_actions += (history[-1][n_agents * agent_idx + 1], )
 	
 	deadlock = True
 	if all([act == 'N' for act in last_actions]) or all([act == 'Lo' for act in last_actions]):
@@ -564,7 +615,7 @@ def agent_coordination(leader_loc: Tuple, follower_loc: Tuple, actions: Tuple[in
 def failed_pickup(observation: np.ndarray, last_actions: Tuple, food_pos: Tuple, field_size: Tuple, max_foods: int) -> bool:
 	"""
 	Verifies if agents tried to correctly pick the food item, but environment did not recognize correct pickup
-	
+
 	:param observation: agents' observation after last step actions
 	:param last_actions: most recent actions executed
 	:param food_pos: position of the food item to be picked
@@ -575,7 +626,7 @@ def failed_pickup(observation: np.ndarray, last_actions: Tuple, food_pos: Tuple,
 	
 	food_adj_locs = adj_locs(food_pos, field_size)
 	n_agents = len(last_actions)
-	agent_locs = [tuple(observation[i][3*max_foods:3*max_foods+2]) for i in range(n_agents)]
+	agent_locs = [tuple(observation[i][3 * max_foods:3 * max_foods + 2]) for i in range(n_agents)]
 	loading_agents = []
 	for i in range(n_agents):
 		if ACTION_MAP[last_actions[i]] == 'Load' and agent_locs[i] in food_adj_locs:
@@ -586,7 +637,8 @@ def failed_pickup(observation: np.ndarray, last_actions: Tuple, food_pos: Tuple,
 
 
 def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mode: int, sa_model: Tuple, leader_decision: Tuple, follower_decision: Tuple,
-				   ma_model: Tuple, ma_decision: Tuple, fields: List, food_locs: List, use_render: bool, data_dir: Path, log_dir: Path, filename_prefix: str, rerun: bool) -> Tuple:
+				   ma_model: Tuple, ma_decision: Tuple, fields: List, food_locs: List, use_render: bool, data_dir: Path,
+				   log_dir: Path, filename_prefix: str, verbose: bool) -> Tuple:
 	"""
 	Evaluation of the cooperation in a level-based foraging scenario giving a team composition
 	
@@ -606,10 +658,13 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 	:param data_dir: path for the data folder
 	:param log_dir: path for the logging folder
 	:param filename_prefix: logging filename prefix
-	:param rerun: flag for reruning specific iterations or do a fun eval run
+	:param verbose: flag that controls if logging execution is minimal or verbose
 	:return: tuple with average steps to capture all food items, average number of steps for follower to correctly predict the current food item, list with the number of steps
 	per evaluation run and list with number of steps for correct prediction per evaluation run
 	"""
+	
+	if verbose:
+		tf.debugging.set_log_device_placement(True)
 	
 	# Verify if a savepoint exists to restart from
 	savepoint_file = data_dir / 'results' / (filename_prefix + '_' + str(mode) + '.save')
@@ -642,22 +697,6 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 		sys.stdout = open(log_dir / (filename_prefix + '_' + str(mode) + '_log.txt'), 'w')
 		sys.stderr = open(log_dir / (filename_prefix + '_' + str(mode) + '_err.txt'), 'w')
 	
-	if rerun:
-		try:
-			with open(data_dir / 'configs' / 're-eval_runs.yaml') as file:
-				rerun_params = yaml.full_load(file)
-				field_size = env.field_size
-				dict_key = str(field_size[0]) + 'x' + str(field_size[1]) + '_food_runs'
-				rerun_list = rerun_params[dict_key][mode]
-		except FileNotFoundError as e:
-			print(colored("File Not Found error: " + str(e) + ". Check if file exists.", color='red'))
-		except KeyError as e:
-			print(colored("Key error: " + str(e) + ". Check if key exists in dictionry.", color='red'))
-			rerun_list = []
-		iterator = rerun_list
-	else:
-		iterator = range(eval_begin, nruns)
-	
 	# Eval parameters setup
 	print('Running eval for team composition %d' % mode)
 	env.seed(RNG_SEED)
@@ -669,17 +708,37 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 	
 	# Agent team setup
 	if mode == 0:
-		leading_agent = LeadingAgent(leader_opt_q_library, leader_opt_pol_library)
-		follower_agent = ToMAgent(follower_opt_q_library, 1, leader_opt_q_library)
+		leader_q_library = []
+		follower_q_library = []
+		for idx in range(len(leader_opt_q_library)):
+			leader_q_library += [leader_opt_q_library[idx].numpy()]
+			follower_q_library += [follower_opt_q_library[idx].numpy()]
+		leading_agent = LeadingAgent(leader_q_library, leader_opt_pol_library)
+		follower_agent = ToMAgent(follower_q_library, 1, leader_q_library)
 	elif mode == 1:
-		leading_agent = LeadingAgent(leader_leg_q_library, leader_leg_pol_library)
-		follower_agent = ToMAgent(follower_opt_q_library, 1, leader_leg_q_library)
+		leader_q_library = []
+		follower_q_library = []
+		for idx in range(len(leader_opt_q_library)):
+			leader_q_library += [leader_leg_q_library[idx].numpy()]
+			follower_q_library += [follower_opt_q_library[idx].numpy()]
+		leading_agent = LeadingAgent(leader_q_library, leader_leg_pol_library)
+		follower_agent = ToMAgent(follower_q_library, 1, leader_q_library)
 	elif mode == 2:
-		leading_agent = LeadingAgent(leader_leg_q_library, leader_leg_pol_library)
-		follower_agent = ToMAgent(follower_leg_q_library, 1, leader_leg_q_library)
+		leader_q_library = []
+		follower_q_library = []
+		for idx in range(len(leader_opt_q_library)):
+			leader_q_library += [leader_leg_q_library[idx].numpy()]
+			follower_q_library += [follower_leg_q_library[idx].numpy()]
+		leading_agent = LeadingAgent(leader_q_library, leader_leg_pol_library)
+		follower_agent = ToMAgent(follower_q_library, 1, leader_q_library)
 	elif mode == 3:
-		leading_agent = LeadingAgent(leader_opt_q_library, leader_opt_pol_library)
-		follower_agent = ToMAgent(follower_leg_q_library, 1, leader_opt_q_library)
+		leader_q_library = []
+		follower_q_library = []
+		for idx in range(len(leader_opt_q_library)):
+			leader_q_library += [leader_opt_q_library[idx].numpy()]
+			follower_q_library += [follower_leg_q_library[idx].numpy()]
+		leading_agent = LeadingAgent(leader_q_library, leader_opt_pol_library)
+		follower_agent = ToMAgent(follower_q_library, 1, leader_q_library)
 	else:
 		print(colored('[Error] Invalid execution mode: %d. Stopping execution' % mode), 'red')
 		return -1, -1, [], [], []
@@ -688,7 +747,7 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 	rng_gen = np.random.default_rng(RNG_SEED)
 	
 	# Evaluation cycle
-	for run_n in iterator:
+	for run_n in range(eval_begin, nruns):
 		print('Starting run %d' % (run_n + 1))
 		print('Environment setup')
 		env.reset()
@@ -710,25 +769,17 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 		leader_decision_model = new_decision_model[:4]
 		follower_decision_model = new_decision_model[4:]
 		if mode == 0:
-			leading_agent.q_library = leader_decision_model[1]
-			leading_agent.pol_library = leader_decision_model[0]
-			follower_agent.q_library = follower_decision_model[1]
-			follower_agent.q_sample = leader_decision_model[1]
+			leading_agent.update_decision(leader_decision_model[1], leader_decision_model[0])
+			follower_agent.update_decision_gpu(follower_decision_model[1], leader_decision_model[1])
 		elif mode == 1:
-			leading_agent.q_library = leader_decision_model[3]
-			leading_agent.pol_library = leader_decision_model[2]
-			follower_agent.q_library = follower_decision_model[1]
-			follower_agent.q_sample = leader_decision_model[3]
+			leading_agent.update_decision(leader_decision_model[3], leader_decision_model[2])
+			follower_agent.update_decision_gpu(follower_decision_model[1], leader_decision_model[3])
 		elif mode == 2:
-			leading_agent.q_library = leader_decision_model[3]
-			leading_agent.pol_library = leader_decision_model[2]
-			follower_agent.q_library = follower_decision_model[3]
-			follower_agent.q_sample = leader_decision_model[3]
+			leading_agent.update_decision(leader_decision_model[3], leader_decision_model[2])
+			follower_agent.update_decision_gpu(follower_decision_model[3], leader_decision_model[3])
 		elif mode == 3:
-			leading_agent.q_library = leader_decision_model[1]
-			leading_agent.pol_library = leader_decision_model[0]
-			follower_agent.q_library = follower_decision_model[3]
-			follower_agent.q_sample = leader_decision_model[1]
+			leading_agent.update_decision(leader_decision_model[1], leader_decision_model[0])
+			follower_agent.update_decision_gpu(follower_decision_model[3], leader_decision_model[1])
 		
 		leader_state = get_state(observation[0], 0, nagents, max_food)
 		follower_state = get_state(observation[1], 0, nagents, max_food)
@@ -749,8 +800,7 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 		pick_error = False
 		n_steps = 0
 		run_history = []
-		history = [[food_locs[leading_agent.task], food_locs[follower_agent.task_inference()],
-					plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
+		history = [[food_locs[leading_agent.task], plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
 		n_pred_steps = []
 		act_try = 0
 		later_error = 0
@@ -800,25 +850,17 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 				leader_decision_model = new_decision_model[:4]
 				follower_decision_model = new_decision_model[4:]
 				if mode == 0:
-					leading_agent.q_library = leader_decision_model[1]
-					leading_agent.pol_library = leader_decision_model[0]
-					follower_agent.q_library = follower_decision_model[1]
-					follower_agent.q_sample = leader_decision_model[1]
+					leading_agent.update_decision(leader_decision_model[1], leader_decision_model[0])
+					follower_agent.update_decision_gpu(follower_decision_model[1], leader_decision_model[1])
 				elif mode == 1:
-					leading_agent.q_library = leader_decision_model[3]
-					leading_agent.pol_library = leader_decision_model[2]
-					follower_agent.q_library = follower_decision_model[1]
-					follower_agent.q_sample = leader_decision_model[3]
+					leading_agent.update_decision(leader_decision_model[3], leader_decision_model[2])
+					follower_agent.update_decision_gpu(follower_decision_model[1], leader_decision_model[3])
 				elif mode == 2:
-					leading_agent.q_library = leader_decision_model[3]
-					leading_agent.pol_library = leader_decision_model[2]
-					follower_agent.q_library = follower_decision_model[3]
-					follower_agent.q_sample = leader_decision_model[3]
+					leading_agent.update_decision(leader_decision_model[3], leader_decision_model[2])
+					follower_agent.update_decision_gpu(follower_decision_model[3], leader_decision_model[3])
 				elif mode == 3:
-					leading_agent.q_library = leader_decision_model[1]
-					leading_agent.pol_library = leader_decision_model[0]
-					follower_agent.q_library = follower_decision_model[3]
-					follower_agent.q_sample = leader_decision_model[1]
+					leading_agent.update_decision(leader_decision_model[1], leader_decision_model[0])
+					follower_agent.update_decision_gpu(follower_decision_model[3], leader_decision_model[1])
 				
 				opt_q_lib = leader_decision_model[1]
 				valid_food = False
@@ -860,8 +902,7 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 			leader_loc = observation[0][3 * max_food + 0:3 * max_food + 2]
 			follower_loc = observation[1][3 * max_food + 0:3 * max_food + 2]
 			actions = agent_coordination(leader_loc, follower_loc, actions, env.field_size)
-			history += [[food_locs[leading_agent.task], food_locs[follower_agent.task_inference()],
-						 plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
+			history += [[food_locs[leading_agent.task], plan_states[leader_state], ACTION_MAP[actions[0]], plan_states[follower_state], ACTION_MAP[actions[1]]]]
 			if use_render:
 				time.sleep(0.15)
 				# input()
@@ -880,13 +921,13 @@ def eval_behaviour(nruns: int, nagents: int, max_food: int, env: ForagingEnv, mo
 		else:
 			n_errors += 1
 			error_runs += [run_n]
-			
+		
 		curr_results = {'avg_steps': avg_run_steps, 'run_steps': run_steps, 'avg_predict': avg_run_predict_steps,
 						'predict_steps': run_predict_steps, 'n_errors': n_errors, 'error_runs': error_runs, 'history': eval_history}
 		store_savepoint(savepoint_file, curr_results, run_n)
 	
 	# Print evaluation results
-	print('Number of Deadlocks: %d' % int(len(deadlock_states)))
+	print('Number of Deadlocks %d' % int(len(deadlock_states)))
 	print('Number of failures due to error: %d' % n_errors)
 	print('Error runs: ' + str(error_runs))
 	if len(run_steps) > 1:
@@ -952,10 +993,7 @@ def main():
 							 '\n\t3 - Optimal agent controls interaction with a legible follower')
 	parser.add_argument('--runs', dest='nruns', type=int, required=True, help='Number of trial runs to obtain eval')
 	parser.add_argument('--render', dest='render', action='store_true', help='Activate the render to see the interaction')
-	parser.add_argument('--paralell', dest='paralell', action='store_true',
-						help='Use paralell computing to speed the evaluation process. (Can\'t be used with render or gpu active)')
-	parser.add_argument('--rerun', dest='rerun', action='store_true',
-						help='Flag that controls if we are running a full eval or re-running specific iterations.')
+	parser.add_argument('--verbose', dest='verbose', action='store_true', help='Add verbose logging')
 	parser.add_argument('--nagents', dest='agents', type=int, default=N_AGENTS,
 						help='Number of agents in the field')
 	parser.add_argument('--nfood', dest='foods', type=int, default=MAX_FOOD,
@@ -967,9 +1005,15 @@ def main():
 	team_comps = args.mode
 	n_runs = args.nruns
 	use_render = args.render
-	paralellize = args.paralell
-	rerun = args.rerun
+	verbose = args.verbose
 	field_length = args.field_length
+	
+	# Setup GPU
+	gpu_more_mem = get_gpu_most_free()
+	logical_gpu = tf.config.list_logical_devices()
+	if verbose:
+		print('GPU: %d' % gpu_more_mem)
+		print(logical_gpu[gpu_more_mem + 1].name)
 	
 	register(
 			id="Foraging-{0}x{0}-{1}p-{2}f{3}-v1".format(field_length, args.agents, args.foods, "-coop" if COOP else ""),
@@ -987,59 +1031,86 @@ def main():
 	
 	env = gym.make("Foraging-{0}x{0}-{1}p-{2}f{3}-v1".format(field_length, args.agents, args.foods, "-coop" if COOP else ""))
 	filename_prefix = 'lbforaging_' + str(field_length) + 'x' + str(field_length) + '_a' + str(args.agents) + 'l' + str(FOOD_LVL)
-	leader_env = load_env_model(filename_prefix + '_leader_environment')
-	leader_opt_decision = load_decision_model(filename_prefix + '_leader_optimal_decision')
-	leader_leg_decision = load_decision_model(filename_prefix + '_leader_legible_decision')
-	_, _, _, follower_rewards = load_env_model(filename_prefix + '_follower_environment')
-	follower_opt_decision = load_decision_model(filename_prefix + '_follower_optimal_decision')
-	follower_leg_decision = load_decision_model(filename_prefix + '_follower_legible_decision')
-	_, actions_ma, transitions_ma, rewards_ma = load_env_model(filename_prefix + '_ma_environment')
-	optimal_ma_decision = load_decision_model(filename_prefix + '_ma_optimal_decision')
 	
-	data_dir = Path(__file__).parent.absolute().parent.absolute() / 'data'
-	with open(data_dir / 'configs' / 'lbforaging_plan_configs.yaml') as file:
-		config_params = yaml.full_load(file)
-		dict_idx = str(field_length) + 'x' + str(field_length) + '_food_locs'
-		if dict_idx in config_params.keys():
-			food_locs = config_params[dict_idx]
-		else:
-			food_locs = [tuple(x) for x in itertools.product(range(field_length), range(field_length))]
-	
-	fields = []
-	rng_gen = np.random.default_rng(RNG_SEED)
-	for _ in range(n_runs):
-		field = np.zeros((field_length, field_length), np.int32)
-		n_spawn_foods = 0
-		while n_spawn_foods < args.foods:
-			field = spawn_food(field, food_locs, rng_gen, (field_length, field_length), args.foods)
-			n_spawn_foods += 1
-		fields += [field]
-	
-	results = {}
-	log_dir = Path(__file__).parent.absolute().parent.absolute() / 'logs'
-	log_prefix = filename_prefix + '_' + str(n_runs) + '_' + ''.join([str(x) for x in team_comps])
-	if paralellize:
-		pool = mp.Pool(int(mp.cpu_count() / 2))
-		pool_results = [pool.apply_async(eval_behaviour, args=(n_runs, args.agents, args.foods, env, comp, (*leader_env, follower_rewards),
-															   (*leader_opt_decision, *leader_leg_decision), (*follower_opt_decision, *follower_leg_decision),
-															   (actions_ma, transitions_ma, rewards_ma), optimal_ma_decision, fields, food_locs, False, data_dir,
-															   log_dir, log_prefix, rerun)) for comp in team_comps]
-		pool.close()
-		for idx in range(len(pool_results)):
-			avg_steps, avg_pred, run_steps, pred_steps, history = pool_results[idx].get()
-			results[team_comps[idx]] = {'avg steps': avg_steps, 'run steps': run_steps, 'avg predictions': avg_pred, 'predictions steps': pred_steps, 'history': history}
-		pool.join()
-	else:
+	with tf.device(logical_gpu[gpu_more_mem + 1].name):
+		if verbose:
+			print('Loading SA Env')
+		states, actions_sa, transitions_sa, leader_rewards = load_env_model(filename_prefix + '_leader_environment')
+		_, _, _, follower_rewards = load_env_model(filename_prefix + '_follower_environment')
+		for key in transitions_sa.keys():
+			np_transitions = transitions_sa[key]
+			tensor_transitions = []
+			for transition in np_transitions:
+				tensor_transitions += [convert_csr_to_sparse_tensor(transition)]
+			transitions_sa[key] = tensor_transitions
+			leader_rewards[key] = tf.convert_to_tensor(leader_rewards[key])
+			follower_rewards[key] = tf.convert_to_tensor(follower_rewards[key])
+		
+		if verbose:
+			print('Loading SA Decision')
+		leader_opt_decision = load_decision_model(filename_prefix + '_leader_optimal_decision')
+		leader_leg_decision = load_decision_model(filename_prefix + '_leader_legible_decision')
+		follower_opt_decision = load_decision_model(filename_prefix + '_follower_optimal_decision')
+		follower_leg_decision = load_decision_model(filename_prefix + '_follower_legible_decision')
+		for i in range(len(leader_opt_decision[0])):
+			leader_opt_decision[0][i] = tf.convert_to_tensor(leader_opt_decision[0][i])
+			leader_leg_decision[0][i] = tf.convert_to_tensor(leader_leg_decision[0][i])
+			follower_opt_decision[0][i] = tf.convert_to_tensor(follower_opt_decision[0][i])
+			follower_leg_decision[0][i] = tf.convert_to_tensor(follower_leg_decision[0][i])
+		
+		if verbose:
+			print('Load MA Env and Decision')
+		_, actions_ma, transitions_ma, rewards_ma = load_env_model(filename_prefix + '_ma_environment')
+		optimal_ma_decision = load_decision_model(filename_prefix + '_ma_optimal_decision')
+		for key in transitions_ma.keys():
+			np_transitions = transitions_ma[key]
+			tensor_transitions = []
+			for transition in np_transitions:
+				tensor_transitions += [convert_csr_to_sparse_tensor(transition)]
+			transitions_ma[key] = tensor_transitions
+			rewards_ma[key] = tf.convert_to_tensor(rewards_ma[key])
+		for i in range(len(optimal_ma_decision[0])):
+			optimal_ma_decision[0][i] = tf.convert_to_tensor(optimal_ma_decision[0][i])
+		
+		if verbose:
+			print('Load Foraging parameters')
+		data_dir = Path(__file__).parent.absolute().parent.absolute() / 'data'
+		with open(data_dir / 'configs' / 'lbforaging_plan_configs.yaml') as file:
+			config_params = yaml.full_load(file)
+			dict_idx = str(field_length) + 'x' + str(field_length) + '_food_locs'
+			if dict_idx in config_params.keys():
+				food_locs = config_params[dict_idx]
+			else:
+				food_locs = [tuple(x) for x in itertools.product(range(field_length), range(field_length))]
+		
+		fields = []
+		rng_gen = np.random.default_rng(RNG_SEED)
+		for _ in range(n_runs):
+			field = np.zeros((field_length, field_length), np.int32)
+			n_spawn_foods = 0
+			while n_spawn_foods < args.foods:
+				field = spawn_food(field, food_locs, rng_gen, (field_length, field_length), args.foods)
+				n_spawn_foods += 1
+			fields += [field]
+		
+		results = {}
+		log_dir = Path(__file__).parent.absolute().parent.absolute() / 'logs'
+		log_prefix = filename_prefix + '_' + str(n_runs) + '_' + ''.join([str(x) for x in team_comps])
+		if verbose:
+			print('Sarting evals')
 		for comp in team_comps:
-			avg_steps, avg_pred, run_steps, pred_steps, history = eval_behaviour(n_runs, args.agents, args.foods, env, comp, (*leader_env, follower_rewards),
-																		(*leader_opt_decision, *leader_leg_decision), (*follower_opt_decision, *follower_leg_decision),
-																		(actions_ma, transitions_ma, rewards_ma), optimal_ma_decision, fields, food_locs, use_render, data_dir,
-																		log_dir, log_prefix, rerun)
+			avg_steps, avg_pred, run_steps, pred_steps, history = eval_behaviour(n_runs, args.agents, args.foods, env, comp,
+																				 (states, actions_sa, transitions_sa, leader_rewards, follower_rewards),
+																				 (*leader_opt_decision, *leader_leg_decision),
+																				 (*follower_opt_decision, *follower_leg_decision),
+																				 (actions_ma, transitions_ma, rewards_ma),
+																				 optimal_ma_decision, fields, food_locs, use_render,
+																				 data_dir, log_dir, log_prefix, verbose)
 			
 			results[comp] = {'avg steps': avg_steps, 'run steps': run_steps, 'avg predictions': avg_pred, 'predictions steps': pred_steps, 'history': history}
-	
-	results_file = data_dir / 'results' / (filename_prefix + '_f' + str(args.foods) + '_' + str(n_runs) + '_' + ''.join([str(x) for x in team_comps]) + '.csv')
-	write_full_results_csv(results_file, results, 'w', ['comp', 'avg steps', 'run steps', 'avg predictions', 'predictions steps', 'history'])
+		
+		results_file = data_dir / 'results' / (filename_prefix + '_f' + str(args.foods) + '_' + str(n_runs) + '_' + ''.join([str(x) for x in team_comps]) + '.csv')
+		write_full_results_csv(results_file, results, 'w', ['comp', 'avg steps', 'run steps', 'avg predictions', 'predictions steps', 'history'])
 
 
 if __name__ == '__main__':

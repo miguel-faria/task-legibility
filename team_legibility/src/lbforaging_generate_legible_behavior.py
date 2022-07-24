@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import sys
 
 import numpy as np
 import argparse
@@ -72,11 +73,14 @@ def main():
 	args = parser.parse_args()
 	mode = args.mode
 	
+	log_dir = Path(__file__).parent.absolute().parent.absolute() / 'logs'
+	filename_prefix = 'lbforaging_' + str(args.rows) + 'x' + str(args.cols) + '_a' + str(args.n_agents) + 'l' + str(args.food_lvl)
+	sys.stdout = open(log_dir / (filename_prefix + '_' + args.mode + '_log.txt'), 'w')
+	sys.stderr = open(log_dir / (filename_prefix + '_' + args.mode + '_err.txt'), 'w')
+	
 	if len(args.agent_lvls) != args.n_agents:
 		print(colored('[ERROR] Number of agents different than number of supplied agent levels. Exiting application', 'red'))
 		return
-	
-	filename_prefix = 'lbforaging_' + str(args.rows) + 'x' + str(args.cols) + '_a' + str(args.n_agents) + 'l' + str(args.food_lvl)
 	
 	data_dir = Path(__file__).parent.absolute().parent.absolute() / 'data'
 	with open(data_dir / 'configs' / 'lbforaging_plan_configs.yaml') as file:
@@ -90,7 +94,7 @@ def main():
 	# Generate world transitions for different food positions (free multi agent setting)
 	field_size = (args.rows, args.cols)
 	multi_agent_env = MultiAgentForagingPlan(field_size, args.max_food, args.food_lvl, args.n_agents, args.agent_lvls, args.food_lvl)
-	for food in tqdm(food_locs, desc='Free multi agent world generation'):
+	for food in tqdm(food_locs, desc='Joint multi agent world generation'):
 		row, col = food
 		multi_agent_env.generate_world_food((row, col, args.food_lvl))
 		
@@ -100,7 +104,7 @@ def main():
 	# Compute optimal Q-functions and policies
 	ma_pol_opt = []
 	ma_Q_opt = []
-	for key in tqdm(multi_agent_env.transitions.keys(), desc='Free multi agent optimal decision computation'):
+	for key in tqdm(multi_agent_env.transitions.keys(), desc='Joint multi agent optimal decision computation'):
 		mdp = MDPAgent(multi_agent_env.states, multi_agent_env.actions, [multi_agent_env.transitions[key]], multi_agent_env.rewards[key],
 					   GAMMA, 'rewards', False)
 		pol, q = mdp.policy_iteration()

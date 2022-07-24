@@ -84,8 +84,8 @@ class ForagingPlan:
 		
 		state_row, state_col = state
 		field_rows, field_cols = field_size
-		return list(set([(min(state_row + 1, field_rows - 1), state_col), (max(state_row - 1, 0), state_col),
-						 (state_row, max(state_col - 1, 0)), (state_row, min(state_col + 1, field_cols - 1))]))
+		return list({(min(state_row + 1, field_rows - 1), state_col), (max(state_row - 1, 0), state_col),
+					 (state_row, max(state_col - 1, 0)), (state_row, min(state_col + 1, field_cols - 1))})
 	
 	def can_load(self, fruit_loc: Tuple, fruit_level: int, agents: List[Tuple]) -> Tuple[bool, List]:
 		

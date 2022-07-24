@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import numpy as np
+import tensorflow as tf
 import termcolor
 import time
 import itertools
@@ -55,6 +56,11 @@ class ToMAgent(object):
 	@q_sample.setter
 	def q_sample(self, new_sample_library: List[np.ndarray]):
 		self._sample_q = new_sample_library
+	
+	def update_decision_gpu(self, q_library: List[tf.Tensor], sample_library: List[tf.Tensor]):
+		for i in range(len(q_library)):
+			self._q_library[i] = q_library[i].numpy()
+			self._sample_q[i] = sample_library[i].numpy()
 	
 	def set_task_list(self, tasks: List[int]) -> None:
 		"""
