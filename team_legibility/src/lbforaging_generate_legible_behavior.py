@@ -82,6 +82,7 @@ def main():
 		print(colored('[ERROR] Number of agents different than number of supplied agent levels. Exiting application', 'red'))
 		return
 	
+	print('Getting food item locations')
 	data_dir = Path(__file__).parent.absolute().parent.absolute() / 'data'
 	with open(data_dir / 'configs' / 'lbforaging_plan_configs.yaml') as file:
 		config_params = yaml.full_load(file)
@@ -92,6 +93,7 @@ def main():
 			food_locs = [item for item in itertools.product(range(args.rows), range(args.cols))]
 	
 	# Generate world transitions for different food positions (free multi agent setting)
+	print('Generating multi-agent centralized joint-action environment')
 	field_size = (args.rows, args.cols)
 	multi_agent_env = MultiAgentForagingPlan(field_size, args.max_food, args.food_lvl, args.n_agents, args.agent_lvls, args.food_lvl)
 	for food in tqdm(food_locs, desc='Joint multi agent world generation'):
@@ -102,6 +104,7 @@ def main():
 	store_env_model(multi_agent_env.states, multi_agent_env.actions, multi_agent_env.transitions, multi_agent_env.rewards, filename_prefix + '_ma_environment')
 
 	# Compute optimal Q-functions and policies
+	print('Computing multi-agent centralized joint-action optimal decision')
 	ma_pol_opt = []
 	ma_Q_opt = []
 	for key in tqdm(multi_agent_env.transitions.keys(), desc='Joint multi agent optimal decision computation'):
@@ -122,6 +125,7 @@ def main():
 		social_roles = ['up', 'down', 'left', 'right']
 
 	# Generate world transitions for different food positions (optimal multi agent setting)
+	print('Generating multi-agent decentralized joint-action environment')
 	opt_multi_agent_env = SingleAgentForagingPlan(field_size, args.max_food, args.food_lvl, args.n_agents, args.agent_lvls, ma_pol_opt,
 												  multi_agent_env.actions, food_locs, social_roles)
 	# print(opt_multi_agent_env.food_pos_lst, food_locs)
@@ -134,6 +138,7 @@ def main():
 					opt_multi_agent_env.rewards, filename_prefix + '_' + mode + '_environment')
 
 	# Compute optimal Q-functions and policies
+	print('Computing multi-agent decentralized joint-action optimal decision')
 	Q_opt = []
 	pol_opt = []
 	opt_multi_agent_env_transitions = []
@@ -149,6 +154,7 @@ def main():
 	store_decision_model(Q_opt, pol_opt, filename_prefix + '_' + mode + '_optimal_decision')
 
 	# Compute legible Q-functions and policies
+	print('Computing multi-agent decentralized joint-action legible decision')
 	legible_mdp = LegibleMDPAgent(opt_multi_agent_env.states, opt_multi_agent_env.actions, opt_multi_agent_env_transitions, GAMMA, False,
 								  list(opt_multi_agent_env.transitions.keys()), BETA, 1, Q_opt)
 	# legible_rewards = legible_mdp.costs
@@ -163,6 +169,8 @@ def main():
 
 	# Store legible Q-functions and policies
 	store_decision_model(Q_legible, pol_legible, filename_prefix + '_' + mode + '_legible_decision')
+	
+	print('Environment and decision making models generated.')
 	
 
 if __name__ == '__main__':

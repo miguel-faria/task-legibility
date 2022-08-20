@@ -15,7 +15,7 @@ class ToMAgent(object):
 		Agent that uses Theory of Mind (ToM) to identify the objectives an agent partner in the environment and act accordingly
 	"""
 	
-	def __init__(self, q_library: List[np.ndarray], sign: int, sample_q_library: List[np.ndarray]):
+	def __init__(self, q_library: List[np.ndarray], sign: int, sample_q_library: List[np.ndarray], rng_seed: int):
 		"""
 		
 		:param q_library:
@@ -28,6 +28,9 @@ class ToMAgent(object):
 		self._task_list = []
 		self._n_tasks = 0
 		self._sample_q = sample_q_library
+		self._rng_gen = np.random.default_rng(rng_seed)
+		self._assumed_task = -1
+		self._assumed_task_conf = 0.0
 	
 	@property
 	def q_library(self) -> List:
@@ -49,6 +52,18 @@ class ToMAgent(object):
 	def task_list(self) -> List[int]:
 		return self._task_list
 	
+	@property
+	def rng_gen(self) -> np.random.Generator:
+		return self._rng_gen
+	
+	@property
+	def assumed_task(self) -> int:
+		return self._assumed_task
+	
+	@property
+	def assumed_task_confidence(self) -> float:
+		return self._assumed_task_conf
+	
 	@q_library.setter
 	def q_library(self, new_library: List[np.ndarray]):
 		self._q_library = new_library
@@ -56,7 +71,7 @@ class ToMAgent(object):
 	@q_sample.setter
 	def q_sample(self, new_sample_library: List[np.ndarray]):
 		self._sample_q = new_sample_library
-	
+		
 	def update_decision_gpu(self, q_library: List[tf.Tensor], sample_library: List[tf.Tensor]):
 		for i in range(len(q_library)):
 			self._q_library[i] = q_library[i].numpy()
@@ -91,7 +106,7 @@ class ToMAgent(object):
 		else:
 			p_max = likelihood / likelihood.sum()
 		high_likelihood = np.argwhere(p_max == np.amax(p_max)).ravel()
-		return self._task_list[np.random.choice(high_likelihood)]
+		return self._task_list[self._rng_gen.choice(high_likelihood)]
 	
 	def sample_probability(self, x: int, a: int, conf: float) -> np.ndarray:
 		"""
@@ -110,12 +125,11 @@ class ToMAgent(object):
 		goals_likelihood = np.array(goals_likelihood)
 		return goals_likelihood
 	
-	def birl_inference(self, sample: Tuple, conf: float, rng_gen: np.random.Generator) -> Tuple[int, float]:
+	def birl_inference(self, sample: Tuple, conf: float) -> Tuple[int, float]:
 		"""
 		
 		:param sample:
 		:param conf:
-		:param rng_gen:
 		:return:
 		"""
 		
@@ -135,20 +149,20 @@ class ToMAgent(object):
 		if likelihood_sum == 0:
 			p_max = np.ones(self._n_tasks) / self._n_tasks
 		else:
-			p_max = r_likelihood / r_likelihood.sum()
+			p_max = r_likelihood / likelihood_sum
 		max_idx = np.argwhere(p_max == np.amax(p_max)).ravel()
-		max_task_prob = rng_gen.choice(max_idx)
+		max_task_prob = self._rng_gen.choice(max_idx)
 		task_conf = p_max[max_task_prob]
 		task_idx = self._task_list[max_task_prob]
-		
+		self._assumed_task = task_idx
+		self._assumed_task_conf = task_conf
 		return task_idx, task_conf
 	
-	def get_actions(self, task_idx: int, state: int, rng_gen: np.random.Generator) -> int:
+	def get_actions(self, task_idx: int, state: int) -> int:
 		"""
 		
 		:param task_idx:
 		:param state:
-		:param rng_gen:
 		:return:
 		"""
 		
@@ -156,47 +170,47 @@ class ToMAgent(object):
 		pol = np.isclose(self._q_library[task_idx], np.max(self._q_library[task_idx], axis=1, keepdims=True), rtol=1e-10, atol=1e-10).astype(int)
 		pol = pol / pol.sum(axis=1, keepdims=True)
 		
-		return rng_gen.choice(nA, p=pol[state, :])
+		return self._rng_gen.choice(nA, p=pol[state, :])
 	
-	def action(self, state: int, sample: Tuple, conf: float, rng_gen: np.random.Generator) -> int:
+	def action(self, state: int, sample: Tuple, conf: float) -> int:
 		"""
 		
 		:param state:
 		:param sample:
 		:param conf:
-		:param rng_gen
 		:return:
 		"""
 		
-		predict_task, task_conf = self.birl_inference(sample, conf, rng_gen)
-		action = self.get_actions(predict_task, state, rng_gen)
+		predict_task, task_conf = self.birl_inference(sample, conf)
+		action = self.get_actions(predict_task, state)
 		
 		return action
 	
-	def sub_acting(self, state: int, rng_gen: np.random.Generator, act_try: int, sample: Tuple, conf: float) -> int:
+	def sub_acting(self, state: int, act_try: int, sample: Tuple, conf: float) -> int:
 		"""
 		Execute a sub-optimal action, useful in cases of a multi-agent deadlock occurrence
 		:param state:
-		:param rng_gen:
 		:param act_try:
 		:param sample:
 		:param conf:
 		:return:
 		"""
-		predict_task, task_conf = self.birl_inference(sample, conf, rng_gen)
+		predict_task, task_conf = self.birl_inference(sample, conf)
 		sorted_q = self._q_library[predict_task][state].copy()
 		sorted_q.sort()
 		
 		if act_try > len(sorted_q):
-			return rng_gen.choice(len(sorted_q))
+			return self._rng_gen.choice(len(sorted_q))
 		
 		q_len = len(sorted_q)
 		nth_best = sorted_q[max(-(act_try + 1), -q_len)]
-		return rng_gen.choice(np.where(self._q_library[predict_task][state] == nth_best)[0])
+		return self._rng_gen.choice(np.where(self._q_library[predict_task][state] == nth_best)[0])
 	
-	def reset_inference(self, tasks: List = None):
+	def reset_inference(self, rng_seed: int, tasks: List = None) -> None:
 		"""
 		
+		:param rng_seed:
+		:param tasks:
 		:return:
 		"""
 		if tasks:
@@ -204,4 +218,4 @@ class ToMAgent(object):
 			self._n_tasks = len(self._task_list)
 		self._interaction_likelihoods = []
 		self._goal_prob = np.ones(self._n_tasks) / self._n_tasks
-		
+		self._rng_gen = np.random.default_rng(rng_seed)

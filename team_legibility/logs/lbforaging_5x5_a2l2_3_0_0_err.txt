@@ -1,0 +1,11 @@
+Update dynamics and policies with current field:   0%|                                                                                                                | 0/6 [00:00<?, ?it/s]Update dynamics and policies with current field:  17%|#################3                                                                                      | 1/6 [00:05<00:27,  5.49s/it]Update dynamics and policies with current field:  33%|##################################6                                                                     | 2/6 [00:10<00:20,  5.14s/it]Update dynamics and policies with current field:  33%|##################################6                                                                     | 2/6 [00:10<00:20,  5.19s/it]
+Traceback (most recent call last):
+  File "C:\Users\migue\Desktop\My_Documents\Instituto.Superior.Tecnico\PhD\task-legibility\team_legibility\src\lbforaging_legible_cooperation.py", line 1058, in <module>
+    main()
+  File "C:\Users\migue\Desktop\My_Documents\Instituto.Superior.Tecnico\PhD\task-legibility\team_legibility\src\lbforaging_legible_cooperation.py", line 1046, in main
+    avg_steps, avg_pred, run_steps, pred_steps, history = eval_behaviour(n_runs, args.agents, args.foods, env, comp, (*leader_env, follower_rewards),
+  File "C:\Users\migue\Desktop\My_Documents\Instituto.Superior.Tecnico\PhD\task-legibility\team_legibility\src\lbforaging_legible_cooperation.py", line 709, in eval_behaviour
+    new_decision_model = update_decision(plan_states, plan_actions, transitions, spawn_foods, food_locs, env.field_size, mode,
+  File "C:\Users\migue\Desktop\My_Documents\Instituto.Superior.Tecnico\PhD\task-legibility\team_legibility\src\lbforaging_legible_cooperation.py", line 371, in update_decision
+    updated_ma_transitions += [update_ma_transitions(states, ma_actions[joint_act_idx], ma_transitions[task_key][joint_act_idx],
+KeyError: '11'

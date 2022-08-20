@@ -1,0 +1,169 @@
+Running eval for team composition 0
+Starting run 1
+Environment setup
+Field: 
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+0110010 0010110
+(0, 2)
+Environment setup complete. Starting evaluation
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+(1, 2)
+0 2 2
+Food caught
+(2, 2)
+[8]
+[[0 0 0]
+ [0 0 0]
+ [0 0 2]]
+[8]
+[[0 0 0]
+ [0 0 0]
+ [0 0 2]]
+[8]
+[[0 0 0]
+ [0 0 0]
+ [0 0 2]]
+(1, 2)
+2 2 2
+[8]
+Run Over!!
+Starting run 2
+Environment setup
+Field: 
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+0110010 0010110
+(2, 2)
+Environment setup complete. Starting evaluation
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+(1, 2)
+0 2 2
+Food caught
+(2, 2)
+[8]
+[[0 0 0]
+ [0 0 0]
+ [0 0 2]]
+[8]
+[[0 0 0]
+ [0 0 0]
+ [0 0 2]]
+[8]
+[[0 0 0]
+ [0 0 0]
+ [0 0 2]]
+(1, 2)
+2 2 2
+[8]
+Run Over!!
+Starting run 3
+Environment setup
+Field: 
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+0110010 0010110
+(2, 2)
+Environment setup complete. Starting evaluation
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+(0, 1)
+0 2 2
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+(0, 1)
+0 2 2
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+(0, 1)
+0 2 2
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+[2, 8]
+[[0 0 2]
+ [0 0 0]
+ [0 0 2]]
+(1, 2)
+0 2 2
+(2, 1)
+2 2 2
+######################################################
+## ENVIRONMENT PICKUP ERROR!!!!!! Ignoring eval run ##
+######################################################
+
+1212110 Load Load
+Run Over!!
+Number of Deadlocks: 0
+Number of failures due to error: 1
+Error runs: [2]
+Average number of steps: 4.67 and std error of 0.00
+Average steps to correct guess: 1.67 and std error of 1.22
+[7, 7]
+[[1], [4]]
+Results written to file

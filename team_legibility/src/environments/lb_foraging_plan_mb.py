@@ -4,6 +4,7 @@ import itertools
 import numpy as np
 import pandas as pd
 import pickle
+import os
 
 from typing import List, NamedTuple, Tuple, Dict, Callable
 from termcolor import colored
@@ -11,6 +12,7 @@ from scipy.sparse import csr_matrix
 from collections import Counter
 from utils import adjacent_locs
 from enum import Enum
+from pathlib import Path
 
 
 OBSERVATION_RANGE = 9
@@ -45,12 +47,33 @@ class AgentRoles(Enum):
 	FOLLOWER = 2
 
 
+def backup_model(file_path: Path, model: Dict, iteration: int) -> None:
+	# Create dictionary with model data
+	save_data = dict()
+	save_data['q'] = model['q']
+	save_data['p'] = model['P']
+	save_data['c_est'] = model['c']
+	save_data['run_it'] = iteration
+	
+	# Save data to file
+	with open(file_path, 'wb') as pickle_file:
+		pickle.dump(save_data, pickle_file)
+		
+
+def load_model(file_path: Path) -> Tuple[List, np.ndarray, np.ndarray, int]:
+	# Load model from file
+	with open(file_path, 'rb') as pickle_file:
+		data = pickle.load(pickle_file)
+	
+	return data['p'], data['c_est'], data['q'], data['run_it']
+
+
 class MBForagingPlan:
 
-	def __init__(self, field_size: Tuple, max_food: int, max_food_level: int, n_agents: int, agent_level: List[int], agent_roles: List[int], min_food_level: int = 1):
+	def __init__(self, field_size: Tuple, max_n_food: int, max_food_level: int, n_agents: int, agent_level: List[int], agent_roles: List[int], min_food_level: int = 1):
 		
 		self._field_size = field_size
-		self._max_food = max_food
+		self._max_n_food = max_n_food
 		self._food_level = max_food_level
 		self._n_agents = n_agents
 		self._agent_levels = agent_level
@@ -90,6 +113,14 @@ class MBForagingPlan:
 	@property
 	def agent_levels(self) -> List[int]:
 		return self._agent_levels
+	
+	@property
+	def food_level(self) -> int:
+		return self._food_level
+	
+	@property
+	def field_size(self) -> Tuple:
+		return self._field_size
 	
 	def generate_states(self, agent_level: int) -> Tuple:
 		
@@ -166,8 +197,8 @@ class MBForagingPlan:
 	
 class MultiAgentMBForagingPlan(MBForagingPlan):
 	
-	def __init__(self, field_size: Tuple, max_food: int, max_food_level: int, n_agents: int, agent_level: List[int], min_food_level: int = 1):
-		super().__init__(field_size, max_food, max_food_level, n_agents, agent_level, min_food_level)
+	def __init__(self, field_size: Tuple, max_n_food: int, max_food_level: int, n_agents: int, agent_level: List[int], agents_roles: List[int], min_food_level: int = 1):
+		super().__init__(field_size, max_n_food, max_food_level, n_agents, agent_level, agents_roles, min_food_level)
 	
 	def generate_actions(self) -> Tuple:
 		
@@ -350,8 +381,8 @@ class MultiAgentMBForagingPlan(MBForagingPlan):
 		nxt_reward = self._rewards[''.join([str(x) for x in food[:-1]])][agents_states[agent_idx], self._actions.index(action[agent_idx])]
 		return nxt_reward, nxt_state
 	
-	def learn_dynamics(self, food: Tuple, n: int, gamma: float, action_func: Callable, rng_gen: np.random.Generator, explore_param: float, qinit: np.ndarray = None,
-					   Pinit: Tuple = None, cinit: np.ndarray = None) -> Tuple[Tuple, np.ndarray, np.ndarray]:
+	def learn_dynamics(self, food: Tuple, max_runs: int, gamma: float, action_func: Callable, rng_gen: np.random.Generator, explore_param: float, qinit: np.ndarray = None,
+					   Pinit: Tuple = None, cinit: np.ndarray = None, finish: bool = False) -> Tuple[Tuple, np.ndarray, np.ndarray]:
 		
 		X = self._states
 		A = self._actions
@@ -361,30 +392,50 @@ class MultiAgentMBForagingPlan(MBForagingPlan):
 		nA = len(A)
 		nR = len(diff_roles)
 		
-		if Pinit is None:
-			P = ()
-			for i in range(nA):
-				act_P = ()
-				for j in range(nR):
-					act_P += (np.eye(nX), )
-				P += (act_P, )
+		models_dir = Path(__file__).parent.absolute().parent.absolute() / 'models'
+		savepoint_file = models_dir / ('lb_foraging_mb_' + str(self.field_size[0]) + 'x' + str(self.field_size[1]) + '_a' + str(self.n_agents) + 'l' +
+									   str(self.food_level) + '.model_bck')
+		if finish:
+			if savepoint_file.exists() and os.path.getsize(savepoint_file) > 0:
+				P, c, q, start = load_model(savepoint_file)
+			else:
+				start = 0
+				P = ()
+				for i in range(nA):
+					act_P = ()
+					for j in range(nR):
+						act_P += (np.eye(nX),)
+					P += (act_P,)
+				
+				c = np.zeros((nR, nX, nA))
+				q = np.zeros((nR, nX, nA))
+			
 		else:
-			P = Pinit
-		if cinit is None:
-			c = np.zeros((nR, nX, nA))
-		else:
-			c = cinit
-		if qinit is None:
-			q = np.zeros((nR, nX, nA))
-		else:
-			q = qinit
+			start = 0
+			if Pinit is None:
+				P = ()
+				for i in range(nA):
+					act_P = ()
+					for j in range(nR):
+						act_P += (np.eye(nX), )
+					P += (act_P, )
+			else:
+				P = Pinit
+			if cinit is None:
+				c = np.zeros((nR, nX, nA))
+			else:
+				c = cinit
+			if qinit is None:
+				q = np.zeros((nR, nX, nA))
+			else:
+				q = qinit
 		
 		N = np.ones((nR, nX, nA))
 		
 		states = [np.random.choice(nX)]
 		exploration = explore_param
 		
-		for t in range(n):
+		for t in range(start, max_runs):
 			
 			# Actions selection
 			action = ()
@@ -411,10 +462,13 @@ class MultiAgentMBForagingPlan(MBForagingPlan):
 			
 			states = nxt_states
 			exploration = max(MIN_EXPLORATION, exploration * 0.9999)
+			
+			if t == 0 or (t + 1) % 100 == 0:
+				backup_model(savepoint_file, {'q': q, 'P': P, 'c': c}, t)
 		
 		return P, c, q
 	
-	def generate_world_food(self, food: Tuple, action_func: Callable, rng_gen: np.random.Generator, explore_param: float, max_steps: int, gamma: float) -> None:
+	def generate_world_food(self, food: Tuple, action_func: Callable, rng_gen: np.random.Generator, explore_param: float, max_steps: int, gamma: float, finish: bool = False) -> None:
 		
 		dict_idx = ''.join([str(x) for x in food[:-1]])
 		
@@ -426,7 +480,7 @@ class MultiAgentMBForagingPlan(MBForagingPlan):
 		
 		rewards = self.generate_rewards(self._states, self._actions, food)
 		self._rewards[dict_idx] = rewards
-		transitions, c_est, q = self.learn_dynamics(food, max_steps, gamma, action_func, rng_gen, explore_param)
+		transitions, c_est, q = self.learn_dynamics(food, max_steps, gamma, action_func, rng_gen, explore_param, finish)
 		
 		self._transitions[dict_idx] = transitions
 		self._rewards_est[dict_idx] = c_est

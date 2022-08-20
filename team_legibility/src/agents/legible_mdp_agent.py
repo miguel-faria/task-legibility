@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix
 class LegibleMDPAgent(MDPAgent):
 	
 	def __init__(self, x: Tuple, a: Tuple, p: List[List[csr_matrix]], gamma: float, verbose: bool, objectives: List[str], beta: float,
-				 sign: int, q_mdps: List[np.ndarray], v_mdps:  np.ndarray = None, dists: np.ndarray = None):
+				 sign: int, q_mdps: List[np.ndarray], v_mdps: np.ndarray = None, dists: np.ndarray = None):
 		self._objectives = objectives
 		self._tasks_q = q_mdps
 		self._v_mdps = v_mdps

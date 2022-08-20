@@ -1,0 +1,4258 @@
+Running eval for team composition 0
+Starting run 1
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (0, 4), (0, 0), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 2
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (0, 3), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 3
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 1), (3, 4), (2, 2), (0, 3), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 4
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 0), (3, 4), (2, 2), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 5
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 4), (2, 2), (4, 4), (2, 1), (4, 0), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 6
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 1), (2, 2), (4, 4), (0, 0), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 7
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(0, 3), (3, 4), (4, 0), (2, 1), (2, 2), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 8
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(4, 0), (2, 2), (0, 0), (0, 3), (2, 1), (3, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 9
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (4, 4), (0, 0), (4, 0), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 10
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 1), (0, 4), (0, 0), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 11
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (0, 3), (3, 4), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 12
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (2, 1), (0, 0), (4, 0), (0, 3), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 13
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (2, 2), (4, 4), (4, 0), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 14
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 2), (3, 4), (0, 4), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 15
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 0), (2, 2), (0, 3), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 16
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (2, 1), (0, 4), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 17
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (2, 2), (0, 4), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 18
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (2, 1), (0, 0), (4, 4), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 19
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 4), (3, 4), (4, 0), (2, 2), (4, 4), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 20
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (0, 3), (2, 1), (0, 4), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 21
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 2), (0, 3), (2, 1), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 22
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (3, 4), (4, 4), (2, 2), (2, 1), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 23
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 4), (2, 1), (2, 2), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 24
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 1), (2, 2), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 25
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 1), (3, 4), (2, 2), (4, 4), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 26
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (3, 4), (0, 0), (0, 3), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 27
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (0, 0), (3, 4), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 28
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (0, 3), (4, 4), (4, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 29
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (2, 2), (0, 3), (0, 4), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 30
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (0, 4), (3, 4), (4, 4), (4, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 31
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 3), (3, 4), (4, 0), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 32
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (4, 4), (4, 0), (0, 0), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 33
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (0, 3), (0, 0), (4, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 34
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (2, 1), (4, 4), (0, 0), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 35
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (4, 0), (2, 1), (2, 2), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 36
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (0, 0), (4, 4), (2, 1), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 37
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(4, 0), (3, 4), (0, 4), (0, 0), (2, 1), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 38
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(4, 0), (0, 4), (3, 4), (0, 0), (2, 1), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 39
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (3, 4), (2, 2), (0, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 40
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 4), (0, 0), (4, 0), (3, 4), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 41
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 0), (2, 1), (3, 4), (0, 3), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 42
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 4), (2, 1), (2, 2), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 43
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 4), (0, 0), (2, 2), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 44
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (0, 3), (0, 4), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 45
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (2, 2), (0, 3), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 46
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (4, 4), (0, 3), (4, 0), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 47
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (0, 3), (2, 1), (2, 2), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 48
+Environment setup
+Field: 
+[[0 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 0), (0, 4), (2, 2), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 49
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (2, 1), (0, 4), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 50
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 2), (2, 1), (4, 0), (4, 4), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 51
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (4, 4), (4, 0), (2, 1), (2, 2), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 52
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (3, 4), (4, 4), (2, 2), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 53
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (2, 1), (0, 3), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 54
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 3), (4, 0), (2, 1), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 55
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (3, 4), (0, 3), (0, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 56
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (0, 0), (2, 1), (4, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 57
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 0), (4, 0), (3, 4), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 58
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 4), (0, 0), (3, 4), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 59
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(3, 4), (0, 0), (2, 2), (2, 1), (4, 0), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 60
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 4), (0, 0), (3, 4), (2, 1), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 61
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (4, 0), (3, 4), (0, 3), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 62
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (4, 0), (0, 3), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 63
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (0, 0), (3, 4), (2, 1), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 64
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 1), (3, 4), (0, 3), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 65
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (2, 1), (0, 3), (4, 4), (0, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 66
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 0), (4, 0), (0, 4), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 67
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 4), (0, 0), (2, 1), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 68
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 2), (4, 0), (4, 4), (0, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 69
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (4, 4), (2, 2), (4, 0), (0, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 70
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 0), (0, 4), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 71
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 2), (0, 3), (4, 0), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 72
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(0, 0), (2, 2), (4, 0), (3, 4), (0, 3), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 73
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (0, 0), (3, 4), (2, 1), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 74
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (0, 3), (0, 0), (2, 1), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 75
+Environment setup
+Field: 
+[[0 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (0, 4), (4, 4), (2, 1), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 76
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 0), (2, 2), (0, 4), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 77
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (4, 0), (4, 4), (2, 2), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 78
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(2, 1), (0, 4), (0, 0), (2, 2), (4, 0), (3, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 79
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (4, 4), (0, 0), (0, 3), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 80
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (0, 0), (2, 1), (4, 0), (0, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 81
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 3), (0, 0), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 82
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (4, 4), (2, 2), (0, 0), (2, 1), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 83
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (4, 4), (2, 1), (0, 3), (2, 2), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 84
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (2, 2), (3, 4), (4, 4), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 85
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 1), (0, 3), (0, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 86
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 4), (2, 2), (2, 1), (0, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 87
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 0), (4, 4), (0, 4), (2, 2), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 88
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (0, 0), (4, 0), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 89
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (0, 4), (3, 4), (2, 2), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 90
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 0), (3, 4), (4, 0), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 91
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (4, 0), (0, 4), (0, 0), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 92
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 0), (0, 3), (4, 0), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 93
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 4), (2, 1), (2, 2), (0, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 94
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (0, 0), (2, 1), (2, 2), (4, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 95
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (0, 3), (4, 0), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 96
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 4), (3, 4), (2, 1), (0, 0), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 97
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (4, 4), (2, 2), (2, 1), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 98
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 0), (4, 4), (4, 0), (0, 3), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 99
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (3, 4), (4, 4), (0, 3), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 100
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (0, 4), (0, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 101
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 4), (2, 2), (2, 1), (4, 4), (0, 0), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 102
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 1), (0, 4), (4, 4), (2, 2), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 103
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (2, 2), (3, 4), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 104
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(0, 4), (3, 4), (4, 0), (0, 0), (2, 1), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 105
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 1), (0, 4), (2, 2), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 106
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(4, 0), (0, 3), (3, 4), (2, 1), (0, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 107
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (0, 0), (3, 4), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 108
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (3, 4), (2, 2), (4, 0), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 109
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 1), (0, 0), (4, 0), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 110
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (0, 0), (0, 3), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 111
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (2, 2), (4, 4), (2, 1), (0, 3), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 112
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(3, 4), (2, 1), (2, 2), (0, 3), (4, 0), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 113
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (3, 4), (4, 4), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 114
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (0, 0), (0, 4), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 115
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (4, 4), (0, 3), (4, 0), (2, 2), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 116
+Environment setup
+Field: 
+[[0 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (2, 1), (4, 4), (0, 4), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 117
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 4), (0, 0), (2, 1), (3, 4), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 118
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(3, 4), (4, 0), (2, 2), (0, 3), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 119
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 1), (2, 2), (0, 4), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 120
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (0, 0), (0, 4), (4, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 121
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (0, 0), (2, 1), (0, 3), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 122
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 1), (4, 4), (2, 2), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 123
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 1), (3, 4), (4, 4), (0, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 124
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 3), (2, 1), (4, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 125
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 0), (2, 2), (4, 4), (2, 1), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 126
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (2, 1), (0, 3), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 127
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(0, 0), (2, 2), (4, 0), (3, 4), (0, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 128
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (0, 3), (0, 0), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 129
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (4, 0), (0, 3), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 130
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 3), (2, 1), (3, 4), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 131
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 2), (0, 4), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 132
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (2, 1), (0, 3), (3, 4), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 133
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(2, 1), (0, 3), (0, 4), (3, 4), (4, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 134
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (2, 2), (4, 4), (0, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 135
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 4), (0, 0), (3, 4), (4, 4), (2, 1), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 136
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (3, 4), (0, 0), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 137
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 3), (2, 1), (2, 2), (4, 4), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 138
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (3, 4), (4, 4), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 139
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (4, 4), (2, 1), (0, 0), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 140
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (0, 3), (2, 2), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 141
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (2, 2), (2, 1), (0, 4), (0, 0), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 142
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (4, 0), (2, 1), (0, 3), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 143
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 2), (2, 1), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 144
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (4, 0), (3, 4), (0, 0), (0, 3), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 145
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (0, 3), (0, 0), (4, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 146
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (0, 0), (2, 1), (0, 3), (4, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 147
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 4), (0, 0), (2, 2), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 148
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (2, 2), (0, 0), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 149
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (0, 3), (2, 2), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 150
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (4, 4), (0, 3), (0, 0), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 151
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (0, 4), (2, 2), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 152
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (0, 3), (4, 4), (0, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 153
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (3, 4), (4, 4), (2, 1), (0, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 154
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (0, 3), (0, 4), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 155
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 4), (3, 4), (2, 2), (4, 4), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 156
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 2), (2, 1), (3, 4), (4, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 157
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(3, 4), (2, 1), (2, 2), (4, 0), (0, 4), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 158
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 4), (2, 2), (4, 4), (4, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 159
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (2, 1), (4, 4), (0, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 160
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (0, 3), (3, 4), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 161
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (0, 3), (4, 4), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 162
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (0, 0), (2, 1), (3, 4), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 163
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (2, 2), (0, 3), (0, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 164
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 0), (0, 4), (3, 4), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 165
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (0, 4), (3, 4), (2, 1), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 166
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (0, 3), (3, 4), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 167
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (0, 4), (2, 2), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 168
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (0, 3), (0, 0), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 169
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (2, 2), (2, 1), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 170
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (2, 1), (0, 3), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 171
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 1), (0, 4), (3, 4), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 172
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (0, 3), (0, 0), (2, 1), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 173
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (3, 4), (0, 4), (4, 0), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 174
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(0, 0), (2, 2), (4, 0), (2, 1), (0, 4), (3, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 175
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (0, 0), (0, 3), (4, 0), (2, 1), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 176
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(3, 4), (0, 3), (2, 2), (4, 0), (0, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 177
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 1), (3, 4), (0, 4), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 178
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(4, 0), (3, 4), (0, 3), (2, 2), (0, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 179
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 3), (0, 4), (3, 4), (2, 1), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 180
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (3, 4), (0, 0), (4, 4), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 181
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 3), (2, 1), (3, 4), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 182
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 3), (2, 2), (2, 1), (4, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 183
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(4, 0), (3, 4), (0, 3), (2, 2), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 184
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (0, 0), (3, 4), (4, 4), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 185
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (3, 4), (2, 2), (2, 1), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 186
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 3), (0, 4), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 187
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (2, 1), (4, 4), (0, 0), (0, 3), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 188
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (0, 0), (4, 4), (2, 1), (2, 2), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 189
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (2, 2), (4, 4), (0, 3), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 190
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (4, 4), (0, 0), (2, 2), (0, 3), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 191
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (2, 1), (0, 4), (0, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 192
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 1), (3, 4), (0, 4), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 193
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(2, 2), (0, 3), (0, 4), (3, 4), (4, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 194
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 3), (4, 0), (0, 4), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 195
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (4, 4), (2, 1), (4, 0), (2, 2), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 196
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (4, 0), (2, 1), (0, 0), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 197
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (2, 1), (4, 4), (0, 3), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 198
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (0, 3), (2, 2), (2, 1), (4, 0), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 199
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (2, 1), (0, 0), (0, 3), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 200
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(2, 1), (0, 3), (2, 2), (4, 0), (0, 0), (3, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 201
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 4), (3, 4), (4, 4), (2, 2), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 202
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (0, 3), (3, 4), (0, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 203
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (0, 3), (2, 1), (2, 2), (4, 0), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 204
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 3), (3, 4), (4, 4), (2, 1), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 205
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (2, 1), (4, 4), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 206
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 1), (2, 2), (0, 0), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 207
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(2, 1), (3, 4), (2, 2), (4, 0), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 208
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (2, 1), (0, 3), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 209
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 3), (0, 4), (3, 4), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 210
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (0, 4), (0, 0), (2, 2), (4, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 211
+Environment setup
+Field: 
+[[0 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 4), (2, 2), (4, 0), (0, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 212
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (4, 4), (0, 3), (0, 4), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 213
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 4), (2, 2), (0, 4), (2, 1), (0, 0), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 214
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(3, 4), (0, 4), (0, 0), (4, 0), (2, 2), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 215
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 4), (4, 4), (2, 1), (4, 0), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 216
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (4, 0), (2, 1), (0, 0), (4, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 217
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(0, 3), (3, 4), (0, 0), (2, 2), (4, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 218
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 3), (0, 0), (4, 4), (4, 0), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 219
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 3), (2, 1), (4, 0), (2, 2), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 220
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (0, 4), (2, 1), (2, 2), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 221
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 0 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 0), (4, 4), (0, 0), (2, 1), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 222
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (3, 4), (4, 4), (0, 3), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 223
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (2, 1), (0, 0), (0, 3), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 224
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (3, 4), (2, 1), (0, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 225
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 4), (4, 0), (4, 4), (0, 0), (2, 1), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 226
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (0, 3), (2, 1), (0, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 227
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (4, 0), (4, 4), (0, 3), (2, 2), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 228
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (2, 1), (0, 4), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 229
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 4), (0, 0), (2, 1), (0, 3), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 230
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 2), (2, 1), (0, 0), (0, 3), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 231
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (4, 4), (4, 0), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 232
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 3), (2, 2), (2, 1), (0, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 233
+Environment setup
+Field: 
+[[0 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (4, 0), (3, 4), (4, 4), (0, 3), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 234
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(0, 3), (2, 1), (4, 0), (3, 4), (0, 4), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 235
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 0]]
+Food pickup sequence: [(3, 4), (0, 0), (2, 2), (4, 0), (0, 3), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 236
+Environment setup
+Field: 
+[[2 0 0 0 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (4, 0), (2, 1), (0, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 237
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (4, 4), (0, 3), (2, 2), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 238
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 1), (0, 0), (4, 4), (0, 3), (2, 2), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 239
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (0, 4), (3, 4), (0, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 240
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (2, 2), (4, 4), (0, 3), (2, 1), (0, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 241
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(2, 2), (3, 4), (4, 4), (0, 0), (4, 0), (0, 3)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 242
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 0), (2, 2), (0, 3), (4, 0), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 243
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 3), (4, 4), (2, 1), (0, 0), (4, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 244
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(0, 0), (0, 3), (2, 2), (2, 1), (3, 4), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 245
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (2, 2), (0, 4), (3, 4), (0, 0), (4, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 246
+Environment setup
+Field: 
+[[0 0 0 2 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(2, 1), (3, 4), (2, 2), (4, 4), (0, 3), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 247
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 2]
+ [0 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 0), (2, 1), (4, 4), (2, 2), (0, 4)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 248
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(3, 4), (0, 3), (2, 2), (4, 4), (0, 0), (4, 0)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 249
+Environment setup
+Field: 
+[[2 0 0 2 0]
+ [0 0 0 0 0]
+ [0 2 2 0 0]
+ [0 0 0 0 0]
+ [2 0 0 0 2]]
+Food pickup sequence: [(4, 0), (0, 3), (4, 4), (0, 0), (2, 2), (2, 1)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Starting run 250
+Environment setup
+Field: 
+[[2 0 0 0 2]
+ [0 0 0 0 0]
+ [0 0 2 0 0]
+ [0 0 0 0 2]
+ [2 0 0 0 2]]
+Food pickup sequence: [(0, 4), (3, 4), (0, 0), (4, 4), (4, 0), (2, 2)]
+Environment setup complete. Starting evaluation
+Food caught
+Food caught
+Food caught
+Food caught
+Food caught
+Run Over!!
+
+Number of Deadlocks: 70
+Number of failures due to error: 0
+Error runs: []
+Average number of steps: 40.06 and std error of 0.72
+Average steps to correct guess: 1.98 and std error of 0.07
+[45, 32, 29, 47, 35, 71, 32, 41, 43, 45, 42, 52, 32, 33, 35, 35, 34, 42, 72, 64, 33, 33, 39, 25, 31, 26, 44, 36, 38, 24, 39, 30, 39, 61, 36, 40, 37, 36, 67, 40, 30, 34, 40, 38, 24, 52, 34, 43, 45, 52, 31, 27, 29, 38, 50, 38, 57, 42, 54, 42, 33, 31, 60, 29, 43, 69, 29, 56, 47, 26, 74, 39, 40, 34, 34, 38, 36, 43, 45, 48, 29, 31, 37, 53, 35, 50, 42, 36, 34, 54, 40, 35, 52, 39, 34, 38, 27, 39, 33, 56, 72, 45, 29, 32, 43, 61, 46, 36, 42, 31, 45, 75, 27, 28, 64, 56, 29, 34, 41, 76, 33, 41, 48, 27, 39, 37, 43, 31, 40, 28, 30, 31, 30, 39, 28, 68, 34, 31, 28, 31, 37, 27, 26, 31, 29, 40, 43, 37, 27, 38, 25, 51, 43, 34, 56, 38, 67, 27, 40, 33, 30, 30, 51, 26, 39, 35, 25, 53, 25, 38, 35, 40, 43, 36, 31, 39, 37, 38, 32, 58, 34, 31, 46, 44, 29, 26, 47, 53, 44, 58, 64, 30, 30, 52, 45, 31, 33, 34, 33, 50, 31, 30, 28, 24, 27, 40, 50, 42, 31, 44, 42, 32, 50, 40, 36, 72, 38, 37, 36, 35, 44, 43, 29, 50, 40, 41, 33, 33, 56, 23, 24, 46, 32, 33, 51, 46, 33, 39, 65, 36, 49, 44, 40, 27, 59, 27, 44, 55, 51, 61]
+[[1, 2, 0, 1, 0], [0, 4, 1, 1, 0], [1, 1, 0, 1, 0], [1, 1, 0, 2, 1], [1, 2, 2, 8, 1], [8, 4, 2, 0, 0], [2, 0, 1, 2, 1], [6, 2, 2, 1, 1], [1, 1, 1, 7, 0], [8, 6, 0, 1, 1], [8, 4, 1, 0, 0], [4, 2, 1, 4, 0], [2, 2, 1, 1, 1], [1, 2, 2, 0, 2], [2, 2, 2, 1, 0], [1, 4, 1, 4, 0], [2, 0, 2, 8, 0], [1, 0, 2, 0, 0], [10, 1, 2, 2, 1], [2, 1, 4, 1, 1], [3, 1, 1, 1, 1], [2, 0, 1, 2, 1], [6, 1, 7, 2, 0], [1, 1, 3, 1, 1], [4, 1, 0, 1, 1], [0, 1, 1, 2, 1], [1, 4, 0, 0, 1], [2, 4, 1, 1, 0], [3, 4, 1, 1, 2], [1, 1, 1, 0, 0], [9, 1, 1, 1, 1], [1, 3, 1, 1, 1], [1, 2, 4, 0, 9], [2, 1, 2, 1, 0], [5, 1, 1, 4, 1], [3, 1, 0, 8, 2], [9, 1, 0, 1, 1], [2, 0, 0, 0, 1], [1, 4, 1, 1, 0], [3, 1, 9, 1, 0], [2, 0, 1, 1, 0], [2, 1, 7, 2, 0], [4, 0, 1, 4, 0], [1, 1, 9, 1, 3], [0, 0, 1, 1, 1], [6, 4, 1, 3, 10], [2, 8, 1, 2, 0], [2, 2, 5, 2, 0], [0, 0, 6, 8, 2], [1, 1, 4, 0, 1], [2, 1, 1, 2, 1], [2, 1, 1, 1, 0], [1, 1, 2, 0, 1], [4, 1, 2, 1, 0], [1, 2, 3, 3, 0], [2, 1, 7, 1, 0], [2, 11, 9, 1, 1], [1, 8, 1, 0, 0], [1, 4, 2, 1, 1], [3, 1, 0, 4, 2], [2, 1, 1, 2, 3], [2, 1, 1, 2, 1], [9, 6, 0, 3, 2], [2, 1, 0, 0, 1], [2, 2, 0, 1, 0], [2, 2, 9, 19, 2], [5, 0, 1, 1, 1], [9, 1, 0, 1, 0], [1, 5, 2, 2, 0], [2, 0, 1, 2, 1], [2, 1, 1, 0, 0], [1, 4, 0, 1, 0], [4, 0, 0, 4, 2], [4, 1, 8, 0, 1], [2, 3, 0, 4, 1], [6, 1, 1, 8, 0], [7, 1, 2, 1, 1], [5, 8, 1, 2, 0], [0, 3, 1, 0, 0], [6, 4, 2, 0, 0], [6, 1, 0, 1, 1], [2, 1, 1, 0, 1], [5, 1, 2, 2, 1], [1, 4, 1, 0, 1], [1, 1, 5, 0, 0], [5, 2, 1, 1, 0], [1, 1, 11, 4, 1], [1, 1, 0, 1, 1], [9, 1, 0, 1, 1], [3, 11, 0, 1, 0], [1, 1, 14, 1, 1], [2, 0, 1, 0, 1], [7, 7, 2, 1, 0], [8, 1, 2, 2, 1], [0, 1, 2, 6, 1], [4, 0, 4, 0, 1], [0, 2, 1, 2, 1], [1, 0, 8, 1, 0], [1, 4, 1, 1, 0], [6, 2, 8, 1, 0], [10, 2, 4, 1, 0], [4, 8, 0, 4, 1], [0, 0, 2, 2, 0], [2, 0, 1, 6, 1], [5, 4, 6, 2, 0], [8, 7, 1, 10, 0], [3, 4, 1, 0, 0], [2, 0, 1, 2, 1], [3, 1, 2, 0, 0], [3, 1, 0, 1, 0], [12, 2, 1, 2, 0], [1, 6, 4, 1, 0], [1, 2, 0, 1, 1], [4, 2, 1, 1, 0], [20, 5, 4, 0, 1], [2, 1, 1, 3, 0], [3, 1, 1, 0, 1], [2, 1, 4, 1, 1], [1, 4, 2, 8, 0], [0, 1, 22, 1, 0], [2, 1, 0, 1, 1], [2, 6, 4, 1, 0], [15, 4, 0, 1, 4], [1, 1, 1, 1, 1], [2, 3, 4, 0, 2], [3, 3, 2, 0, 3], [4, 4, 0, 1, 0], [6, 1, 0, 0, 1], [1, 9, 6, 1, 0], [1, 1, 2, 1, 1], [3, 2, 4, 2, 1], [4, 1, 0, 0, 0], [4, 0, 1, 1, 0], [2, 2, 1, 1, 3], [0, 1, 0, 0, 3], [1, 1, 1, 0, 0], [2, 1, 4, 2, 0], [2, 4, 1, 1, 1], [0, 1, 1, 2, 0], [1, 4, 2, 2, 0], [1, 2, 4, 1, 1], [2, 1, 1, 1, 1], [3, 1, 1, 1, 0], [2, 1, 1, 2, 1], [1, 2, 1, 0, 1], [3, 2, 2, 2, 0], [13, 1, 4, 1, 1], [6, 1, 1, 0, 1], [1, 1, 3, 1, 0], [4, 2, 3, 3, 0], [1, 0, 1, 2, 0], [2, 0, 0, 1, 0], [7, 1, 0, 10, 0], [4, 1, 1, 1, 2], [0, 8, 0, 1, 1], [6, 1, 1, 1, 1], [8, 6, 1, 0, 0], [0, 1, 2, 2, 0], [1, 2, 6, 2, 4], [2, 4, 1, 0, 0], [1, 1, 0, 1, 1], [1, 6, 1, 0, 0], [1, 3, 1, 1, 0], [1, 0, 1, 0, 0], [7, 1, 0, 4, 2], [5, 0, 6, 0, 1], [4, 1, 2, 1, 1], [2, 4, 6, 0, 0], [1, 0, 2, 1, 0], [4, 4, 1, 1, 0], [0, 1, 6, 0, 1], [4, 12, 0, 1, 1], [1, 0, 0, 0, 1], [3, 4, 0, 1, 0], [1, 2, 1, 0, 1], [2, 0, 1, 0, 0], [1, 4, 0, 0, 2], [2, 1, 0, 1, 0], [6, 1, 1, 0, 1], [2, 1, 1, 0, 0], [3, 1, 2, 2, 0], [1, 0, 1, 4, 0], [7, 1, 3, 5, 4], [6, 2, 0, 13, 1], [1, 0, 1, 1, 0], [1, 1, 1, 2, 1], [2, 2, 4, 0, 0], [10, 4, 7, 7, 1], [2, 2, 1, 13, 1], [4, 3, 14, 2, 1], [10, 1, 4, 1, 1], [0, 1, 0, 0, 4], [3, 1, 1, 1, 0], [2, 0, 2, 0, 0], [5, 1, 6, 1, 2], [3, 1, 1, 1, 0], [2, 1, 1, 4, 0], [1, 3, 1, 4, 0], [1, 4, 2, 0, 1], [1, 2, 1, 0, 0], [8, 1, 0, 0, 1], [0, 4, 1, 0, 0], [1, 0, 2, 1, 1], [1, 1, 0, 0, 2], [2, 1, 1, 1, 1], [5, 1, 7, 2, 1], [1, 4, 1, 1, 0], [7, 4, 1, 1, 0], [1, 5, 1, 0, 0], [4, 5, 1, 4, 0], [4, 1, 2, 2, 0], [2, 1, 1, 1, 0], [10, 2, 2, 8, 1], [6, 0, 1, 6, 4], [2, 0, 4, 1, 3], [3, 21, 2, 0, 0], [1, 1, 4, 4, 0], [2, 0, 0, 0, 0], [3, 0, 4, 1, 1], [1, 1, 7, 2, 0], [1, 3, 1, 0, 1], [1, 2, 1, 1, 11], [1, 0, 2, 0, 1], [1, 0, 1, 5, 0], [0, 4, 1, 0, 1], [3, 1, 1, 1, 0], [2, 3, 1, 0, 1], [0, 4, 1, 4, 0], [1, 1, 21, 1, 1], [1, 2, 0, 1, 0], [1, 1, 1, 1, 1], [0, 1, 1, 1, 0], [2, 1, 1, 1, 0], [1, 4, 0, 1, 0], [3, 12, 2, 3, 0], [1, 11, 2, 0, 0], [1, 4, 1, 1, 1], [1, 1, 11, 0, 1], [0, 2, 0, 0, 0], [1, 1, 1, 8, 1], [1, 1, 1, 7, 0], [2, 2, 5, 0, 1], [0, 0, 10, 1, 4], [1, 1, 1, 1, 1], [0, 2, 0, 0, 0], [0, 0, 1, 1, 1], [4, 2, 1, 8, 2], [2, 0, 1, 1, 0], [0, 12, 1, 0, 2], [5, 1, 13, 0, 0]]

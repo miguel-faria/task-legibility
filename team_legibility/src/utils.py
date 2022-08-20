@@ -29,7 +29,7 @@ def write_iterations_results_csv(csv_file: Path, results: Dict, access_type: str
 		
 		
 def store_savepoint(file_path: Path, results: Dict, iteration: int) -> None:
-	# Create JSON with save data
+	# Create dictionary with save data
 	save_data = dict()
 	save_data['results'] = results
 	save_data['iteration'] = iteration
@@ -86,7 +86,7 @@ def evaluate_pol_gpu(transitions: List[tf.Tensor], rewards: tf.Tensor, gamma: fl
 
 
 def policy_iteration(mdp: Tuple[np.ndarray, List[str], List[csr_matrix], np.ndarray, float],
-					 init_pol: np.ndarray = None, init_q: np.ndarray = None) -> (np.ndarray, np.ndarray):
+					 init_pol: np.ndarray = None, init_q: np.ndarray = None, verbose: bool = False) -> (np.ndarray, np.ndarray):
 	
 	X = mdp[0]
 	A = mdp[1]
@@ -114,15 +114,18 @@ def policy_iteration(mdp: Tuple[np.ndarray, List[str], List[csr_matrix], np.ndar
 	i = 0
 	
 	while not quit:
-	
-		# print('Iteration %d' % (i + 1), end='\r')
+		
+		if verbose:
+			print('Iteration %d' % (i + 1))
 	
 		J = evaluate_pol(P, c, gamma, pol, nX, nA)
 	
 		for act in range(nA):
 			Q[:, act, None] = c[:, act, None] + gamma * P[act].dot(J)
 	
-		# print(Q)
+		if verbose:
+			for x in range(nX):
+				print(X[x], str(Q[x, :]))
 		Qmin = Q.max(axis=1, keepdims=True)
 		polnew = np.isclose(Q, Qmin, atol=1e-10, rtol=1e-10).astype(int)
 		polnew = polnew / polnew.sum(axis=1, keepdims=True)
@@ -131,7 +134,8 @@ def policy_iteration(mdp: Tuple[np.ndarray, List[str], List[csr_matrix], np.ndar
 		pol = polnew
 		i += 1
 	
-	# print('N. iterations: ', i)
+	if verbose:
+		print('N. iterations: ', i)
 	
 	return pol, Q
 

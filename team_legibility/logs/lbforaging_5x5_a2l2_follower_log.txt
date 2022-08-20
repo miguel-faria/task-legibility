@@ -1,0 +1,6 @@
+Getting food item locations
+Generating multi-agent centralized joint-action environment
+Computing multi-agent centralized joint-action optimal decision
+Generating multi-agent decentralized joint-action environment
+Computing multi-agent decentralized joint-action optimal decision
+Computing multi-agent decentralized joint-action legible decision
